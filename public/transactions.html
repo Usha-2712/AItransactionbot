@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - AI Transaction Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls input {
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1em;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .controls button {
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+
+        thead {
+            background: #667eea;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #dee2e6;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        td {
+            padding: 15px;
+            color: #495057;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-expense {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-income {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-confirmed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .amount-expense {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .amount-income {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            table {
+                font-size: 0.85em;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Transaction History</h1>
+            <p>AI Transaction Bot - View all your transactions</p>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
+            <button onclick="loadTransactions()">Load Transactions</button>
+            <button onclick="refreshTransactions()">🔄 Refresh</button>
+            <a href="/upload.html" style="padding: 10px 25px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; font-size: 1em; transition: background 0.3s;">📄 Upload Receipt</a>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <h3>Total Transactions</h3>
+                <div class="value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Expenses</h3>
+                <div class="value amount-expense" id="totalExpenses">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Income</h3>
+                <div class="value amount-income" id="totalIncome">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Net Balance</h3>
+                <div class="value" id="netBalance">$0.00</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="loading" class="loading">Loading transactions...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="empty" class="empty" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <h2>No transactions found</h2>
+                <p>Start by creating your first transaction!</p>
+            </div>
+            <table id="transactionsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Merchant</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                        <th>Transaction ID</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = 'test-user-123';
+
+        // Load transactions on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if userId is in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('userId');
+            if (userId) {
+                document.getElementById('userIdInput').value = userId;
+                currentUserId = userId;
+            }
+            loadTransactions();
+        });
+
+        async function loadTransactions() {
+            const userId = document.getElementById('userIdInput').value.trim();
+            if (!userId) {
+                showError('Please enter a User ID');
+                return;
+            }
+
+            currentUserId = userId;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('empty').style.display = 'none';
+            document.getElementById('transactionsTable').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/transactions/${encodeURIComponent(userId)}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error?.message || 'Failed to load transactions');
+                }
+
+                const transactions = result.data.transactions || [];
+                displayTransactions(transactions);
+            } catch (error) {
+                showError('Error loading transactions: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function refreshTransactions() {
+            loadTransactions();
+        }
+
+        function displayTransactions(transactions) {
+            if (transactions.length === 0) {
+                document.getElementById('empty').style.display = 'block';
+                return;
+            }
+
+            const tbody = document.getElementById('transactionsBody');
+            tbody.innerHTML = '';
+
+            let totalExpenses = 0;
+            let totalIncome = 0;
+
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                // Format date
+                const date = new Date(transaction.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                // Format amount
+                const amount = parseFloat(transaction.amount);
+                const formattedAmount = '$' + amount.toFixed(2);
+                const amountClass = transaction.type === 'income' ? 'amount-income' : 'amount-expense';
+
+                if (transaction.type === 'expense') {
+                    totalExpenses += amount;
+                } else {
+                    totalIncome += amount;
+                }
+
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td><span class="badge badge-${transaction.type}">${transaction.type}</span></td>
+                    <td><strong>${transaction.merchant || '-'}</strong></td>
+                    <td>${transaction.category || '-'}</td>
+                    <td class="${amountClass}">${formattedAmount}</td>
+                    <td>${transaction.description || '-'}</td>
+                    <td><span class="badge badge-confirmed">${transaction.status || 'confirmed'}</span></td>
+                    <td>${transaction.source || 'manual'}</td>
+                    <td style="font-size: 0.85em; color: #6c757d;">${transaction.transactionID || transaction.transactionId || '-'}</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            // Update stats
+            document.getElementById('totalCount').textContent = transactions.length;
+            document.getElementById('totalExpenses').textContent = '$' + totalExpenses.toFixed(2);
+            document.getElementById('totalIncome').textContent = '$' + totalIncome.toFixed(2);
+            const netBalance = totalIncome - totalExpenses;
+            const netClass = netBalance >= 0 ? 'amount-income' : 'amount-expense';
+            document.getElementById('netBalance').textContent = '$' + netBalance.toFixed(2);
+            document.getElementById('netBalance').className = 'value ' + netClass;
+
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('transactionsTable').style.display = 'table';
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+
+        // Allow Enter key to load transactions
+        document.getElementById('userIdInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadTransactions();
+            }
+        });
+    </script>
+</body>
+</html>
