@@ -110,12 +110,15 @@ export const extractTransactionFromText = async (text) => {
     }
 
     // Validate required fields
-    const requiredFields = ['amount', 'date', 'merchant', 'category', 'type'];
-    const missingFields = requiredFields.filter(field => !transactionData[field]);
-
-    if (missingFields.length > 0) {
-      throw new LLMError(`Missing required fields in LLM response: ${missingFields.join(', ')}`);
-    }
+        // Validate required fields
+        const requiredFields = ['amount', 'date', 'merchant', 'category', 'type'];
+        const missingFields = requiredFields.filter(field => transactionData[field] === undefined || transactionData[field] === null);
+    
+        if (missingFields.length > 0) {
+          console.error('LLM Response Data:', JSON.stringify(transactionData, null, 2));
+          console.error('Missing fields:', missingFields);
+          throw new LLMError(`Missing required fields in LLM response: ${missingFields.join(', ')}. Response: ${JSON.stringify(transactionData)}`);
+        }
 
     // Ensure numeric fields are numbers
     if (typeof transactionData.amount === 'string') {
@@ -245,62 +248,3 @@ Please provide a resolution recommendation in JSON format:
   }
 };
 
-// ## Code explanation:
-
-// ### 1. Import statements:avascript
-// import OpenAI from 'openai';
-// import dotenv from 'dotenv';
-// import { LLMError } from '../utils/errors.js';- `OpenAI`: Official OpenAI Node.js SDK
-// - `dotenv`: Loads environment variables
-// - `LLMError`: Custom error class
-
-// ### 2. System prompt:
-// The `SYSTEM_PROMPT` instructs the LLM to:
-// - Return only valid JSON (no markdown, no explanations)
-// - Follow a specific structure
-// - Handle missing information intelligently
-// - Use correct date format
-
-// ### 3. `extractTransactionFromText(text)` function:
-
-// What it does:
-// - Takes text (user message or OCR output)
-// - Sends to OpenAI API with the system prompt
-// - Parses JSON response
-// - Validates required fields
-// - Returns structured transaction data
-
-// Features:
-// - Uses `gpt-4o-mini` (cost-effective)
-// - Low temperature (0.1) for consistent output
-// - `response_format: { type: 'json_object' }` forces JSON
-// - Handles date formatting
-// - Sets defaults for optional fields
-
-// Example usage:
-// const text = "I bought coffee for $5.50 at Starbucks today";
-// const transaction = await extractTransactionFromText(text);
-// // Returns: { amount: 5.50, date: "2024-01-15", merchant: "Starbucks", ... }### 4. Error handling:
-
-// Handles OpenAI errors:
-// - 401: Invalid API key
-// - 429: Rate limit exceeded
-// - 500: Server error
-// - 503: Service unavailable
-
-// ### 5. `resolveTransactionIssue()` function (optional):
-
-// What it does:
-// - Uses LLM to analyze transaction issues
-// - Provides resolution recommendations
-// - Can detect duplicates, missing fields, etc.
-
-// Returns:
-// {
-//   action: "save" | "skip" | "update",
-//   reason: "Explanation",
-//   confidence: 0.8,
-//   updatedData: { /* if action is update */ }
-// }---
-
-// ## How it works:
