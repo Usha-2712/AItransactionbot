@@ -45,23 +45,57 @@ const upload = multer({
 });
 
 /**
- * POST /chat - Process transaction from text message
- * Body: { userId: string, message: string }
+ * POST /api/chat - Process transaction from text message
+ * 
+ * Chatbot API endpoint that:
+ * - Captures user input from chat interface
+ * - Processes transaction using LLM
+ * - Returns confirmation response with transaction details
+ * 
+ * Request Body: { userId: string, message: string }
+ * 
+ * Response: {
+ *   success: boolean,
+ *   data: {
+ *     transaction: Object,
+ *     message: string,
+ *     isDuplicate: boolean
+ *   }
+ * }
+ * 
+ * Message handling:
+ * - Supports single-line and multi-line input
+ * - Trims leading/trailing whitespace
+ * - Normalizes internal whitespace (multiple spaces/newlines collapsed)
+ * - Validates non-empty message after trimming
  */
 router.post('/chat', asyncHandler(async (req, res) => {
   const { userId, message } = req.body;
 
   // Validate required fields
-  if (!userId) {
-    throw new ValidationError('User ID is required', 'userId');
+  if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+    throw new ValidationError('User ID is required and cannot be empty', 'userId');
   }
 
-  if (!message || typeof message !== 'string' || message.trim().length === 0) {
-    throw new ValidationError('Message is required and cannot be empty', 'message');
+  if (!message || typeof message !== 'string') {
+    throw new ValidationError('Message is required and must be a string', 'message');
   }
 
-  // Process transaction
-  const result = await processTransactionFromText(userId, message.trim());
+  // Trim and normalize message
+  // Remove leading/trailing whitespace and normalize internal whitespace
+  // Replace multiple spaces/newlines with single space for better LLM processing
+  let normalizedMessage = message.trim();
+  
+  if (normalizedMessage.length === 0) {
+    throw new ValidationError('Message cannot be empty after trimming whitespace', 'message');
+  }
+
+  // Normalize internal whitespace: replace multiple spaces/newlines with single space
+  // This helps with multi-line messages that users may paste or type
+  normalizedMessage = normalizedMessage.replace(/\s+/g, ' ').trim();
+
+  // Process transaction with normalized message
+  const result = await processTransactionFromText(userId, normalizedMessage);
 
   // Send response
   res.json({

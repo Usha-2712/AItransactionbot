@@ -132,6 +132,9 @@
         .table-container {
             overflow-x: auto;
             padding: 30px;
+            position: relative;
+            max-height: calc(100vh - 400px);
+            overflow-y: auto;
         }
 
         table {
@@ -141,8 +144,11 @@
         }
 
         thead {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         th {
@@ -195,11 +201,19 @@
         .amount-expense {
             color: #dc3545;
             font-weight: 600;
+            background: rgba(220, 53, 69, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
         }
 
         .amount-income {
             color: #28a745;
             font-weight: 600;
+            background: rgba(40, 167, 69, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
         }
 
         .loading {
@@ -220,13 +234,57 @@
 
         .empty {
             text-align: center;
-            padding: 50px;
+            padding: 60px 30px;
             color: #6c757d;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px;
         }
 
         .empty-icon {
-            font-size: 4em;
+            font-size: 5em;
             margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .empty p {
+            font-size: 1.1em;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .empty-actions {
+            margin-top: 25px;
+        }
+
+        .empty-actions a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        .empty-actions a:hover {
+            background: #5568d3;
+        }
+
+        .empty-actions a.secondary {
+            background: #6c757d;
+        }
+
+        .empty-actions a.secondary:hover {
+            background: #5a6268;
         }
 
         .filter-info {
@@ -248,6 +306,24 @@
 
             th, td {
                 padding: 10px 8px;
+            }
+
+            .empty {
+                padding: 40px 20px;
+            }
+
+            .empty-icon {
+                font-size: 4em;
+            }
+
+            .empty h2 {
+                font-size: 1.3em;
+            }
+
+            .amount-expense,
+            .amount-income {
+                padding: 3px 6px;
+                font-size: 0.9em;
             }
         }
     </style>
@@ -308,8 +384,12 @@
             <div id="error" class="error" style="display: none;"></div>
             <div id="empty" class="empty" style="display: none;">
                 <div class="empty-icon">📭</div>
-                <h2>No transactions found</h2>
-                <p>Start by creating your first transaction!</p>
+                <h2>No Transactions Found</h2>
+                <p id="emptyMessage">Start by creating your first transaction using the chat interface or upload a receipt!</p>
+                <div class="empty-actions">
+                    <a href="/">💬 Start Chat</a>
+                    <a href="/upload.html" class="secondary">📄 Upload Receipt</a>
+                </div>
             </div>
             <table id="transactionsTable" style="display: none;">
                 <thead>
@@ -506,7 +586,21 @@
 
         function displayTransactions(transactions) {
             if (transactions.length === 0) {
-                document.getElementById('empty').style.display = 'block';
+                const emptyDiv = document.getElementById('empty');
+                const emptyMessage = document.getElementById('emptyMessage');
+                
+                // Update empty state message based on filters
+                const selectedYear = document.getElementById('filterYear').value;
+                const selectedMonth = document.getElementById('filterMonth').value;
+                const selectedDay = document.getElementById('filterDay').value;
+                
+                if (selectedYear || selectedMonth || selectedDay) {
+                    emptyMessage.textContent = 'No transactions found for the selected filters. Try adjusting your filters or clear them to see all transactions.';
+                } else {
+                    emptyMessage.textContent = 'Start by creating your first transaction using the chat interface or upload a receipt!';
+                }
+                
+                emptyDiv.style.display = 'block';
                 document.getElementById('transactionsTable').style.display = 'none';
                 document.getElementById('stats').style.display = 'none';
                 return;
@@ -521,10 +615,10 @@
             transactions.forEach(transaction => {
                 const row = document.createElement('tr');
                 
-                // Format date using the new function (no timezone issues)
+                // Format date using timezone-safe function (YYYY-MM-DD to readable format)
                 const date = formatDate(transaction.date);
                 
-                // Format amount
+                // Format amount with proper highlighting
                 const amount = parseFloat(transaction.amount);
                 const formattedAmount = '$' + amount.toFixed(2);
                 const amountClass = transaction.type === 'income' ? 'amount-income' : 'amount-expense';

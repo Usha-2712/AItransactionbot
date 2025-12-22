@@ -122,6 +122,13 @@
 
         .user-id-section {
             display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+        }
+
+        .user-id-section .label-row {
+            display: flex;
             align-items: center;
             gap: 10px;
         }
@@ -137,6 +144,27 @@
         .user-id-section label {
             font-size: 0.9em;
             opacity: 0.9;
+        }
+
+        .user-id-helper {
+            font-size: 0.75em;
+            opacity: 0.7;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
+            max-width: 250px;
+            line-height: 1.3;
+        }
+
+        .user-id-warning {
+            font-size: 0.75em;
+            color: #fbbf24;
+            margin-top: 2px;
+            display: none;
+        }
+
+        .user-id-section input:focus {
+            outline: 2px solid rgba(255, 255, 255, 0.5);
+            outline-offset: 2px;
         }
 
         /* Messages Area */
@@ -184,22 +212,114 @@
             border-bottom-left-radius: 4px;
         }
 
+        /* Ensure message content wrapper works for all message types */
+        .message .message-content {
+            flex: 1;
+        }
+
         .message.success {
             background: #d1fae5;
             color: #065f46;
-            border-color: #10b981;
+            border: 2px solid #10b981;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.success::before {
+            content: '✓';
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #10b981;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .message.info {
+            background: #f0f9ff;
+            color: #0c4a6e;
+            border: 2px solid #0ea5e9;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.info::before {
+            content: 'ℹ';
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #0ea5e9;
+            flex-shrink: 0;
+            margin-top: 2px;
         }
 
         .message.error {
             background: #fee2e2;
             color: #991b1b;
-            border-color: #dc3545;
+            border: 2px solid #dc3545;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.error::before {
+            content: '✕';
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #dc3545;
+            flex-shrink: 0;
+            margin-top: 2px;
         }
 
         .message.loading {
             background: #e0e7ff;
             color: #3730a3;
-            border-color: #6366f1;
+            border: 2px solid #6366f1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.loading::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid #6366f1;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% {
+                content: '.';
+            }
+            40% {
+                content: '..';
+            }
+            60%, 100% {
+                content: '...';
+            }
+        }
+
+        .message-content {
+            flex: 1;
         }
 
         .message-time {
@@ -235,16 +355,29 @@
             gap: 15px;
         }
 
-        .input-area input {
+        .input-area input,
+        .input-area textarea {
             flex: 1;
             padding: 12px 18px;
             border: 2px solid #dee2e6;
             border-radius: 25px;
             font-size: 1em;
             transition: border-color 0.3s;
+            font-family: inherit;
+            resize: none;
+            min-height: 20px;
+            max-height: 120px;
+            line-height: 1.5;
         }
 
-        .input-area input:focus {
+        .input-area textarea {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            overflow-y: auto;
+        }
+
+        .input-area input:focus,
+        .input-area textarea:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -369,8 +502,16 @@
                 width: 100%;
             }
 
+            .user-id-section .label-row {
+                width: 100%;
+            }
+
             .user-id-section input {
                 flex: 1;
+            }
+
+            .user-id-helper {
+                max-width: 100%;
             }
 
             .message {
@@ -388,6 +529,10 @@
 
             .input-area {
                 flex-direction: column;
+            }
+
+            .input-area textarea {
+                max-height: 100px;
             }
 
             .input-area button {
@@ -423,7 +568,7 @@
                 <li><a href="/">Chat</a></li>
                 <li><a href="/upload.html">Upload Receipt</a></li>
                 <li><a href="/transactions.html">Transactions</a></li>
-                <li><a href="/transactions.html">Dashboard</a></li>
+                <li><a href="/dashboard.html">Dashboard</a></li>
             </ul>
         </div>
     </nav>
@@ -447,8 +592,12 @@
             <div class="chat-header">
                 <h2>💬 Transaction Chatbot</h2>
                 <div class="user-id-section">
-                    <label for="userIdInput">User ID:</label>
-                    <input type="text" id="userIdInput" placeholder="e.g., test-user-123" value="test-user-123">
+                    <div class="label-row">
+                        <label for="userIdInput">User ID:</label>
+                        <input type="text" id="userIdInput" placeholder="e.g., test-user-123" value="test-user-123">
+                    </div>
+                    <div class="user-id-helper" id="userIdHelper">Identifies your transactions</div>
+                    <div class="user-id-warning" id="userIdWarning">⚠️ User ID cleared. Restoring default...</div>
                 </div>
             </div>
 
@@ -471,12 +620,12 @@
             </div>
 
             <div class="input-area">
-                <input 
-                    type="text" 
+                <textarea 
                     id="messageInput" 
+                    rows="1"
                     placeholder="Type your transaction here... (e.g., Spent $25.50 at Target today)"
                     autocomplete="off"
-                >
+                ></textarea>
                 <button id="sendButton" onclick="sendMessage()">Send</button>
             </div>
         </div>
@@ -497,11 +646,69 @@
             sendMessage();
         }
 
-        // Allow Enter key to send message
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        // Auto-resize textarea based on content
+        function autoResizeTextarea() {
+            messageInput.style.height = 'auto';
+            const scrollHeight = messageInput.scrollHeight;
+            const maxHeight = 120; // matches max-height in CSS
+            messageInput.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+        }
+
+        messageInput.addEventListener('input', autoResizeTextarea);
+
+        // Handle keyboard input: Enter sends, Shift+Enter new line
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                // Check if Shift is pressed
+                if (e.shiftKey) {
+                    // Shift+Enter: Allow default behavior (insert newline)
+                    // Only on desktop (mobile keyboards rarely have Shift easily accessible)
+                    return;
+                } else {
+                    // Enter alone: Send message
+                    e.preventDefault();
+                    sendMessage();
+                }
+            }
+        });
+
+        // Default User ID for auto-restore
+        const DEFAULT_USER_ID = 'test-user-123';
+        let userIdRestoreTimeout = null;
+
+        // Prevent accidental User ID clearing
+        userIdInput.addEventListener('blur', () => {
+            const currentValue = userIdInput.value.trim();
+            if (currentValue === '') {
+                // Show warning
+                const warning = document.getElementById('userIdWarning');
+                warning.style.display = 'block';
+                
+                // Auto-restore after 1 second
+                userIdRestoreTimeout = setTimeout(() => {
+                    userIdInput.value = DEFAULT_USER_ID;
+                    warning.style.display = 'none';
+                }, 1000);
+            } else {
+                // Hide warning if user enters something
+                const warning = document.getElementById('userIdWarning');
+                warning.style.display = 'none';
+                if (userIdRestoreTimeout) {
+                    clearTimeout(userIdRestoreTimeout);
+                    userIdRestoreTimeout = null;
+                }
+            }
+        });
+
+        // Clear warning when user starts typing
+        userIdInput.addEventListener('input', () => {
+            const warning = document.getElementById('userIdWarning');
+            if (warning.style.display === 'block') {
+                warning.style.display = 'none';
+                if (userIdRestoreTimeout) {
+                    clearTimeout(userIdRestoreTimeout);
+                    userIdRestoreTimeout = null;
+                }
             }
         });
 
@@ -512,27 +719,37 @@
             const userId = urlParams.get('userId');
             if (userId) {
                 userIdInput.value = userId;
+            } else if (!userIdInput.value || userIdInput.value.trim() === '') {
+                // Ensure default is set if empty
+                userIdInput.value = DEFAULT_USER_ID;
             }
             messageInput.focus();
         });
 
+        /**
+         * Send a message to the chatbot API
+         * Handles user input, API communication, and response display
+         */
         function sendMessage() {
-            const message = messageInput.value.trim();
+            // Get and trim the message
+            let message = messageInput.value.trim();
             const userId = userIdInput.value.trim();
 
+            // Block empty messages (after trimming whitespace)
             if (!message) {
                 return;
             }
 
             if (!userId) {
-                showBotMessage('Please enter a User ID before sending a message.', 'error');
+                showBotMessage('Please enter a User ID before sending a message.', 'bot error');
                 return;
             }
 
-            // Clear input
+            // Clear input and reset height
             messageInput.value = '';
+            messageInput.style.height = 'auto';
 
-            // Remove empty state
+            // Remove empty state on first message
             if (!hasMessages) {
                 const emptyState = document.getElementById('emptyState');
                 if (emptyState) {
@@ -541,17 +758,26 @@
                 hasMessages = true;
             }
 
-            // Show user message
+            // Display user message (right aligned)
             addMessage(message, 'user');
 
-            // Disable input and button
-            messageInput.disabled = true;
-            sendButton.disabled = true;
+            // Disable input and button during processing
+            setInputState(false);
 
-            // Show loading message
-            const loadingId = addMessage('Processing transaction...', 'bot loading');
+            // Show loading indicator
+            const loadingId = addMessage('Bot is processing<span class="loading-dots"></span>', 'bot loading');
 
-            // Send to API
+            // POST to /api/chat endpoint
+            postToChatAPI(userId, message, loadingId);
+        }
+
+        /**
+         * POST user input to /api/chat endpoint
+         * @param {string} userId - User identifier
+         * @param {string} message - User's message text
+         * @param {string} loadingId - ID of loading message to remove
+         */
+        function postToChatAPI(userId, message, loadingId) {
             fetch('/api/chat', {
                 method: 'POST',
                 headers: {
@@ -562,88 +788,174 @@
                     message: message
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                // Check if response is ok
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error?.message || `Server error: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
-                // Remove loading message
+                // Remove loading indicator
                 removeMessage(loadingId);
 
                 if (data.success) {
-                    // Show success message
-                    const transaction = data.data.transaction;
-                    const responseMessage = data.data.message;
-                    
-                    let botMessage = responseMessage;
-                    if (data.data.isDuplicate) {
-                        botMessage += ' ⚠️ (This transaction may be a duplicate)';
-                    }
-
-                    addMessage(botMessage, 'bot success');
-
-                    // Optionally show transaction details
-                    if (transaction) {
-                        const details = `\n📊 Transaction Details:\n` +
-                                      `   Amount: $${transaction.amount.toFixed(2)}\n` +
-                                      `   Merchant: ${transaction.merchant}\n` +
-                                      `   Category: ${transaction.category}\n` +
-                                      `   Date: ${transaction.date}\n` +
-                                      `   Type: ${transaction.type}`;
-                        addMessage(details, 'bot');
-                    }
-
-                    // Add link to view transactions
-                    const viewTransactionsHTML = `<a href="/transactions.html?userId=${encodeURIComponent(userId)}" target="_blank" style="color: #667eea; text-decoration: underline; font-weight: 600;">👁️ View all transactions →</a>`;
-                    const linkMessageDiv = document.createElement('div');
-                    linkMessageDiv.className = 'message bot';
-                    linkMessageDiv.id = 'msg-' + Date.now() + '-' + Math.random();
-                    const linkTextDiv = document.createElement('div');
-                    linkTextDiv.innerHTML = viewTransactionsHTML;
-                    const linkTimeDiv = document.createElement('div');
-                    linkTimeDiv.className = 'message-time';
-                    linkTimeDiv.textContent = new Date().toLocaleTimeString();
-                    linkMessageDiv.appendChild(linkTextDiv);
-                    linkMessageDiv.appendChild(linkTimeDiv);
-                    messagesArea.appendChild(linkMessageDiv);
-                    messagesArea.scrollTop = messagesArea.scrollHeight;
+                    // Display bot confirmation response (left aligned)
+                    displaySuccessResponse(data, userId);
                 } else {
-                    // Show error message
-                    const errorMsg = data.error?.message || 'An error occurred while processing your transaction.';
-                    addMessage(`❌ Error: ${errorMsg}`, 'bot error');
+                    // Display error politely
+                    displayError(data.error?.message || 'An error occurred while processing your transaction.');
                 }
             })
             .catch(error => {
-                // Remove loading message
+                // Remove loading indicator
                 removeMessage(loadingId);
 
-                // Show error
-                addMessage(`❌ Error: ${error.message || 'Failed to connect to server. Please try again.'}`, 'bot error');
+                // Display error politely
+                displayError(error.message || 'Failed to connect to server. Please try again.');
             })
             .finally(() => {
                 // Re-enable input and button
-                messageInput.disabled = false;
-                sendButton.disabled = false;
+                setInputState(true);
                 messageInput.focus();
             });
         }
 
+        /**
+         * Display successful transaction response
+         * @param {Object} data - API response data
+         * @param {string} userId - User identifier
+         */
+        function displaySuccessResponse(data, userId) {
+            const transaction = data.data.transaction;
+            const responseMessage = data.data.message;
+            
+            // Remove checkmark emoji from message (CSS already adds one)
+            let botMessage = responseMessage.replace(/✅/g, '').trim();
+            if (data.data.isDuplicate) {
+                botMessage += ' ⚠️ (This transaction may be a duplicate)';
+            }
+
+            // Display bot confirmation (left aligned, green)
+            addMessage(botMessage, 'bot success');
+
+            // Display transaction details as informational message
+            if (transaction) {
+                const details = formatTransactionDetails(transaction);
+                addMessage(details, 'bot info');
+            }
+
+            // Add link to view transactions
+            addViewTransactionsLink(userId);
+        }
+
+        /**
+         * Format transaction details for display
+         * @param {Object} transaction - Transaction object
+         * @returns {string} Formatted transaction details
+         */
+        function formatTransactionDetails(transaction) {
+            return `Transaction Details:\n` +
+                  `Amount: $${transaction.amount.toFixed(2)}\n` +
+                  `Merchant: ${transaction.merchant}\n` +
+                  `Category: ${transaction.category}\n` +
+                  `Date: ${transaction.date}\n` +
+                  `Type: ${transaction.type}`;
+        }
+
+        /**
+         * Add link to view all transactions
+         * @param {string} userId - User identifier
+         */
+        function addViewTransactionsLink(userId) {
+            const viewTransactionsHTML = `<a href="/transactions.html?userId=${encodeURIComponent(userId)}" target="_blank" style="color: #667eea; text-decoration: underline; font-weight: 600;">👁️ View all transactions →</a>`;
+            const linkMessageDiv = document.createElement('div');
+            linkMessageDiv.className = 'message bot';
+            linkMessageDiv.id = 'msg-' + Date.now() + '-' + Math.random();
+            const linkTextDiv = document.createElement('div');
+            linkTextDiv.innerHTML = viewTransactionsHTML;
+            const linkTimeDiv = document.createElement('div');
+            linkTimeDiv.className = 'message-time';
+            linkTimeDiv.textContent = new Date().toLocaleTimeString();
+            linkMessageDiv.appendChild(linkTextDiv);
+            linkMessageDiv.appendChild(linkTimeDiv);
+            messagesArea.appendChild(linkMessageDiv);
+            scrollToBottom();
+        }
+
+        /**
+         * Display error message politely
+         * @param {string} errorMessage - Error message to display
+         */
+        function displayError(errorMessage) {
+            addMessage(`Error: ${errorMessage}`, 'bot error');
+        }
+
+        /**
+         * Enable or disable input and send button
+         * @param {boolean} enabled - Whether to enable (true) or disable (false)
+         */
+        function setInputState(enabled) {
+            messageInput.disabled = !enabled;
+            sendButton.disabled = !enabled;
+        }
+
+        /**
+         * Add a message to the chat area
+         * @param {string} text - Message text content
+         * @param {string} type - Message type: 'user', 'bot', 'bot success', 'bot info', 'bot error', 'bot loading'
+         * @returns {string} Message element ID
+         */
         function addMessage(text, type) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
             messageDiv.id = 'msg-' + Date.now() + '-' + Math.random();
             
+            // Create content wrapper for all messages
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'message-content';
+            
             const textDiv = document.createElement('div');
-            textDiv.textContent = text;
+            // Preserve line breaks for multi-line messages
+            textDiv.style.whiteSpace = 'pre-wrap';
+            
+            // Allow HTML for loading messages (animated dots)
+            if (type.includes('loading')) {
+                textDiv.innerHTML = text;
+            } else {
+                textDiv.textContent = text;
+            }
             
             const timeDiv = document.createElement('div');
             timeDiv.className = 'message-time';
             timeDiv.textContent = new Date().toLocaleTimeString();
             
-            messageDiv.appendChild(textDiv);
-            messageDiv.appendChild(timeDiv);
+            contentWrapper.appendChild(textDiv);
+            contentWrapper.appendChild(timeDiv);
+            messageDiv.appendChild(contentWrapper);
             
             messagesArea.appendChild(messageDiv);
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+            
+            // Auto-scroll to newest message with smooth behavior
+            scrollToBottom();
 
             return messageDiv.id;
+        }
+
+        /**
+         * Scroll chat area to the bottom (newest message)
+         * Uses smooth scrolling for better UX
+         */
+        function scrollToBottom() {
+            // Use requestAnimationFrame for smooth scrolling
+            requestAnimationFrame(() => {
+                messagesArea.scrollTo({
+                    top: messagesArea.scrollHeight,
+                    behavior: 'smooth'
+                });
+            });
         }
 
         function removeMessage(messageId) {

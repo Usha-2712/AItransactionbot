@@ -151,6 +151,88 @@
 
         .result h3 {
             margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .transaction-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .transaction-details.warning-border {
+            border-top-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: inherit;
+            opacity: 0.8;
+        }
+
+        .detail-value {
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .detail-value.amount {
+            font-size: 1.1em;
+            color: #10b981;
+        }
+
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .action-button.primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .action-button.primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .action-button.secondary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-button.secondary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .loading {
@@ -232,6 +314,7 @@
                     <h3 id="resultTitle"></h3>
                     <p id="resultMessage"></p>
                     <div id="resultDetails"></div>
+                    <div class="action-buttons" id="actionButtons" style="display: none;"></div>
                 </div>
 
                 <button type="submit" class="upload-button" id="uploadButton">
@@ -314,10 +397,17 @@
                 formData.append('userId', userId);
                 formData.append('file', file);
 
+                // POST to /api/chat/upload
                 const response = await fetch('/api/chat/upload', {
                     method: 'POST',
                     body: formData
                 });
+
+                // Handle response errors
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `Server error: ${response.status} ${response.statusText}`);
+                }
 
                 const data = await response.json();
 
@@ -329,78 +419,210 @@
                         showWarning(
                             'Duplicate Transaction Detected',
                             data.data.message,
-                            data.data.duplicateTransaction
+                            data.data.transaction || data.data.duplicateTransaction,
+                            userId
                         );
                     } else {
                         showSuccess(
-                            'Transaction Recorded!',
+                            'Transaction Recorded Successfully!',
                             data.data.message,
-                            data.data.transaction
+                            data.data.transaction,
+                            userId
                         );
-                        // Clear form
+                        // Clear form after successful upload
                         fileInput.value = '';
                         previewImage.style.display = 'none';
                         fileInfo.textContent = '';
                     }
                 } else {
-                    showError('Error: ' + (data.error?.message || 'Unknown error'));
+                    // Handle validation or processing errors
+                    const errorMsg = data.error?.message || 'Unknown error occurred';
+                    showError(errorMsg, data.error?.type);
                 }
             } catch (error) {
                 loading.style.display = 'none';
                 uploadButton.disabled = false;
-                showError('Error uploading receipt: ' + error.message);
+                
+                // Handle different error types gracefully
+                let errorMessage = 'Failed to process receipt. ';
+                
+                if (error.message.includes('OCR') || error.message.includes('Textract')) {
+                    errorMessage += 'OCR service error: Unable to extract text from the image. Please ensure the image is clear and readable.';
+                } else if (error.message.includes('validation') || error.message.includes('Validation')) {
+                    errorMessage += error.message;
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                    errorMessage += 'Network error: Please check your connection and try again.';
+                } else if (error.message.includes('size') || error.message.includes('10MB')) {
+                    errorMessage += 'File too large: Please use an image smaller than 10MB.';
+                } else {
+                    errorMessage += error.message || 'An unexpected error occurred.';
+                }
+                
+                showError(errorMessage, 'OCR');
             }
         });
 
-        function showSuccess(title, message, transaction) {
+        /**
+         * Display successful transaction extraction and confirmation
+         * @param {string} title - Success title
+         * @param {string} message - Confirmation message
+         * @param {Object} transaction - Extracted transaction data
+         * @param {string} userId - User identifier
+         */
+        function showSuccess(title, message, transaction, userId) {
             result.className = 'result success';
             result.style.display = 'block';
             document.getElementById('resultTitle').textContent = '✅ ' + title;
             document.getElementById('resultMessage').textContent = message;
             
+            // Display extracted transaction fields clearly
             if (transaction) {
-                const details = `
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(16, 185, 129, 0.3);">
-                        <p><strong>Transaction ID:</strong> ${transaction.transactionID || transaction.transactionId}</p>
-                        <p><strong>Amount:</strong> $${transaction.amount.toFixed(2)}</p>
-                        <p><strong>Merchant:</strong> ${transaction.merchant}</p>
-                        <p><strong>Category:</strong> ${transaction.category}</p>
-                        <p><strong>Date:</strong> ${transaction.date}</p>
-                    </div>
-                `;
+                const details = formatTransactionDetails(transaction, 'success');
                 document.getElementById('resultDetails').innerHTML = details;
             } else {
                 document.getElementById('resultDetails').innerHTML = '';
             }
+
+            // Add "View Transactions" button
+            const actionButtons = document.getElementById('actionButtons');
+            actionButtons.innerHTML = `
+                <a href="/transactions.html?userId=${encodeURIComponent(userId)}" class="action-button primary" target="_blank">
+                    👁️ View Transactions
+                </a>
+                <button type="button" class="action-button secondary" onclick="resetForm()">
+                    📄 Upload Another Receipt
+                </button>
+            `;
+            actionButtons.style.display = 'flex';
         }
 
-        function showError(message) {
+        /**
+         * Display error message gracefully
+         * @param {string} message - Error message
+         * @param {string} errorType - Type of error (OCR, Validation, etc.)
+         */
+        function showError(message, errorType = '') {
             result.className = 'result error';
             result.style.display = 'block';
-            document.getElementById('resultTitle').textContent = '❌ Error';
+            
+            // Customize error title based on error type
+            let errorTitle = '❌ Error';
+            if (errorType === 'OCR' || message.includes('OCR') || message.includes('Textract')) {
+                errorTitle = '🔍 OCR Processing Error';
+            } else if (errorType === 'ValidationError' || message.includes('validation')) {
+                errorTitle = '⚠️ Validation Error';
+            }
+            
+            document.getElementById('resultTitle').textContent = errorTitle;
             document.getElementById('resultMessage').textContent = message;
             document.getElementById('resultDetails').innerHTML = '';
+            
+            // Hide action buttons for errors
+            document.getElementById('actionButtons').style.display = 'none';
         }
 
-        function showWarning(title, message, duplicateTransaction) {
+        /**
+         * Display duplicate transaction warning
+         * @param {string} title - Warning title
+         * @param {string} message - Warning message
+         * @param {Object} duplicateTransaction - Duplicate transaction data
+         * @param {string} userId - User identifier
+         */
+        function showWarning(title, message, duplicateTransaction, userId) {
             result.className = 'result warning';
             result.style.display = 'block';
             document.getElementById('resultTitle').textContent = '⚠️ ' + title;
             document.getElementById('resultMessage').textContent = message;
             
             if (duplicateTransaction) {
-                const details = `
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(245, 158, 11, 0.3);">
-                        <p><strong>Existing Transaction ID:</strong> ${duplicateTransaction.transactionID || duplicateTransaction.transactionId}</p>
-                        <p><strong>Amount:</strong> $${duplicateTransaction.amount.toFixed(2)}</p>
-                        <p><strong>Merchant:</strong> ${duplicateTransaction.merchant}</p>
-                        <p><strong>Date:</strong> ${duplicateTransaction.date}</p>
-                    </div>
-                `;
+                const details = formatTransactionDetails(duplicateTransaction, 'warning');
                 document.getElementById('resultDetails').innerHTML = details;
             } else {
                 document.getElementById('resultDetails').innerHTML = '';
             }
+
+            // Add "View Transactions" button for duplicates too
+            const actionButtons = document.getElementById('actionButtons');
+            actionButtons.innerHTML = `
+                <a href="/transactions.html?userId=${encodeURIComponent(userId)}" class="action-button primary" target="_blank">
+                    👁️ View Transactions
+                </a>
+                <button type="button" class="action-button secondary" onclick="resetForm()">
+                    📄 Upload Another Receipt
+                </button>
+            `;
+            actionButtons.style.display = 'flex';
+        }
+
+        /**
+         * Format transaction details for clear display
+         * @param {Object} transaction - Transaction object
+         * @param {string} type - Display type ('success' or 'warning')
+         * @returns {string} HTML string with formatted details
+         */
+        function formatTransactionDetails(transaction, type = 'success') {
+            const borderClass = type === 'warning' ? 'warning-border' : '';
+            const formattedDate = formatDate(transaction.date);
+            
+            return `
+                <div class="transaction-details ${borderClass}">
+                    <div class="detail-row">
+                        <span class="detail-label">Transaction ID:</span>
+                        <span class="detail-value" style="font-size: 0.9em; font-family: monospace;">${transaction.transactionID || transaction.transactionId || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount:</span>
+                        <span class="detail-value amount">$${transaction.amount.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Merchant:</span>
+                        <span class="detail-value">${transaction.merchant || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Category:</span>
+                        <span class="detail-value">${transaction.category || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value" style="text-transform: capitalize;">${transaction.type || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date:</span>
+                        <span class="detail-value">${formattedDate}</span>
+                    </div>
+                    ${transaction.description ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Description:</span>
+                        <span class="detail-value">${transaction.description}</span>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        /**
+         * Format date from YYYY-MM-DD to readable format
+         * @param {string} dateString - Date in YYYY-MM-DD format
+         * @returns {string} Formatted date string
+         */
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const [year, month, day] = dateString.split('-').map(Number);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[month - 1]} ${day}, ${year}`;
+        }
+
+        /**
+         * Reset form for new upload
+         */
+        function resetForm() {
+            uploadForm.reset();
+            previewImage.style.display = 'none';
+            fileInfo.textContent = '';
+            result.style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'none';
+            document.getElementById('userId').value = 'test-user-123';
         }
     </script>
 </body>

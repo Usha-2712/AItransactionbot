@@ -74,6 +74,7 @@ const startServer = async () => {
       console.log(`💡 Health check: http://localhost:${PORT}/api/health`);
       console.log(`📊 View transactions: http://localhost:${PORT}/transactions.html`);
       console.log(`📄 Upload receipt: http://localhost:${PORT}/upload.html`);
+      console.log(`📈 Dashboard: http://localhost:${PORT}/dashboard.html`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

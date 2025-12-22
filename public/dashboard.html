@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AI Transaction Bot</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls input {
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1em;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .controls button {
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+
+        .controls a {
+            padding: 10px 25px;
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: background 0.3s;
+            display: inline-block;
+        }
+
+        .controls a:hover {
+            background: #059669;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .summary-card.expense {
+            border-left: 4px solid #dc3545;
+        }
+
+        .summary-card.income {
+            border-left: 4px solid #28a745;
+        }
+
+        .summary-card.balance {
+            border-left: 4px solid #667eea;
+        }
+
+        .summary-card h3 {
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-card.expense .value {
+            color: #dc3545;
+        }
+
+        .summary-card.income .value {
+            color: #28a745;
+        }
+
+        .summary-card.balance .value {
+            color: #667eea;
+        }
+
+        .summary-card .period {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .charts-section {
+            padding: 30px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chart-container h2 {
+            color: #495057;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrapper {
+                height: 300px;
+            }
+
+            .summary-card .value {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Dashboard</h1>
+            <p>Financial Overview & Analytics</p>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
+            <button onclick="loadDashboard()">Load Dashboard</button>
+            <a href="/transactions.html">📋 View Transactions</a>
+            <a href="/">💬 Chat</a>
+            <a href="/upload.html">📄 Upload Receipt</a>
+        </div>
+
+        <div id="loading" class="loading">Loading dashboard data...</div>
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="dashboardContent" style="display: none;">
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card expense">
+                    <h3>Total Expenses</h3>
+                    <div class="value" id="monthlyExpenses">$0.00</div>
+                    <div class="period">This Month</div>
+                </div>
+                <div class="summary-card income">
+                    <h3>Total Income</h3>
+                    <div class="value" id="monthlyIncome">$0.00</div>
+                    <div class="period">This Month</div>
+                </div>
+                <div class="summary-card balance">
+                    <h3>Net Balance</h3>
+                    <div class="value" id="netBalance">$0.00</div>
+                    <div class="period">This Month</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h2>Monthly Expenses Trend</h2>
+                        <div class="chart-wrapper">
+                            <canvas id="expensesTrendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h2>Income vs Expenses</h2>
+                        <div class="chart-wrapper">
+                            <canvas id="incomeExpensesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="empty" class="empty" style="display: none;">
+            <h2>No Transactions Found</h2>
+            <p>Start by creating transactions to see your dashboard analytics.</p>
+        </div>
+    </div>
+
+    <script>
+        let expensesTrendChart = null;
+        let incomeExpensesChart = null;
+
+        // Load dashboard on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('userId');
+            if (userId) {
+                document.getElementById('userIdInput').value = userId;
+            }
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            const userId = document.getElementById('userIdInput').value.trim();
+            if (!userId) {
+                showError('Please enter a User ID');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('empty').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/transactions/${encodeURIComponent(userId)}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error?.message || 'Failed to load transactions');
+                }
+
+                const transactions = result.data.transactions || [];
+
+                if (transactions.length === 0) {
+                    document.getElementById('empty').style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+
+                // Process and display dashboard
+                processDashboardData(transactions);
+                document.getElementById('dashboardContent').style.display = 'block';
+            } catch (error) {
+                showError('Error loading dashboard: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function processDashboardData(transactions) {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            // Calculate this month's totals
+            let monthlyExpenses = 0;
+            let monthlyIncome = 0;
+
+            // Group transactions by month for charts
+            const monthlyData = {};
+
+            transactions.forEach(transaction => {
+                if (!transaction.date) return;
+
+                const [year, month, day] = transaction.date.split('-').map(Number);
+                const transactionDate = new Date(year, month - 1, day);
+                const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+
+                // Initialize month if not exists
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = { expenses: 0, income: 0, label: getMonthLabel(year, month) };
+                }
+
+                const amount = parseFloat(transaction.amount) || 0;
+
+                if (transaction.type === 'expense') {
+                    monthlyData[monthKey].expenses += amount;
+                    // Add to current month if it's this month
+                    if (year === currentYear && month === currentMonth + 1) {
+                        monthlyExpenses += amount;
+                    }
+                } else if (transaction.type === 'income') {
+                    monthlyData[monthKey].income += amount;
+                    // Add to current month if it's this month
+                    if (year === currentYear && month === currentMonth + 1) {
+                        monthlyIncome += amount;
+                    }
+                }
+            });
+
+            // Update summary cards
+            document.getElementById('monthlyExpenses').textContent = '$' + monthlyExpenses.toFixed(2);
+            document.getElementById('monthlyIncome').textContent = '$' + monthlyIncome.toFixed(2);
+            
+            const netBalance = monthlyIncome - monthlyExpenses;
+            const balanceElement = document.getElementById('netBalance');
+            balanceElement.textContent = '$' + netBalance.toFixed(2);
+            balanceElement.style.color = netBalance >= 0 ? '#28a745' : '#dc3545';
+
+            // Sort months chronologically
+            const sortedMonths = Object.keys(monthlyData).sort();
+
+            // Prepare chart data
+            const monthLabels = sortedMonths.map(key => monthlyData[key].label);
+            const expensesData = sortedMonths.map(key => monthlyData[key].expenses);
+            const incomeData = sortedMonths.map(key => monthlyData[key].income);
+
+            // Create/update charts
+            createExpensesTrendChart(monthLabels, expensesData);
+            createIncomeExpensesChart(monthLabels, incomeData, expensesData);
+        }
+
+        function getMonthLabel(year, month) {
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[month - 1]} ${year}`;
+        }
+
+        function createExpensesTrendChart(labels, expensesData) {
+            const ctx = document.getElementById('expensesTrendChart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (expensesTrendChart) {
+                expensesTrendChart.destroy();
+            }
+
+            expensesTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Expenses',
+                        data: expensesData,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#dc3545',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Expenses: $' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createIncomeExpensesChart(labels, incomeData, expensesData) {
+            const ctx = document.getElementById('incomeExpensesChart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (incomeExpensesChart) {
+                incomeExpensesChart.destroy();
+            }
+
+            incomeExpensesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomeData,
+                            backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                            borderColor: '#28a745',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Expenses',
+                            data: expensesData,
+                            backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                            borderColor: '#dc3545',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+
+        // Allow Enter key to load dashboard
+        document.getElementById('userIdInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
+
