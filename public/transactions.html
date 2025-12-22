@@ -48,19 +48,27 @@
             padding: 20px 30px;
             background: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
+        }
+
+        .controls-row {
             display: flex;
             gap: 15px;
             align-items: center;
             flex-wrap: wrap;
+            margin-bottom: 15px;
         }
 
-        .controls input {
+        .controls-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .controls input, .controls select {
             padding: 10px 15px;
             border: 2px solid #dee2e6;
             border-radius: 5px;
             font-size: 1em;
             flex: 1;
-            min-width: 200px;
+            min-width: 150px;
         }
 
         .controls button {
@@ -76,6 +84,20 @@
 
         .controls button:hover {
             background: #5568d3;
+        }
+
+        .controls button.secondary {
+            background: #6c757d;
+        }
+
+        .controls button.secondary:hover {
+            background: #5a6268;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 80px;
         }
 
         .stats {
@@ -207,6 +229,14 @@
             margin-bottom: 20px;
         }
 
+        .filter-info {
+            padding: 10px 30px;
+            background: #e7f3ff;
+            border-bottom: 1px solid #dee2e6;
+            color: #004085;
+            font-size: 0.95em;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -230,11 +260,29 @@
         </div>
 
         <div class="controls">
-            <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
-            <button onclick="loadTransactions()">Load Transactions</button>
-            <button onclick="refreshTransactions()">🔄 Refresh</button>
-            <a href="/upload.html" style="padding: 10px 25px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; font-size: 1em; transition: background 0.3s;">📄 Upload Receipt</a>
+            <div class="controls-row">
+                <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
+                <button onclick="loadTransactions()">Load Transactions</button>
+                <button onclick="refreshTransactions()">🔄 Refresh</button>
+                <a href="/upload.html" style="padding: 10px 25px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; font-size: 1em; transition: background 0.3s; display: inline-block;">📄 Upload Receipt</a>
+            </div>
+            <div class="controls-row">
+                <span class="filter-label">Filter:</span>
+                <select id="filterYear">
+                    <option value="">All Years</option>
+                </select>
+                <select id="filterMonth">
+                    <option value="">All Months</option>
+                </select>
+                <select id="filterDay">
+                    <option value="">All Days</option>
+                </select>
+                <button onclick="applyFilters()" class="secondary">Apply Filter</button>
+                <button onclick="clearFilters()" class="secondary">Clear Filters</button>
+            </div>
         </div>
+
+        <div class="filter-info" id="filterInfo" style="display: none;"></div>
 
         <div class="stats" id="stats" style="display: none;">
             <div class="stat-card">
@@ -285,6 +333,7 @@
 
     <script>
         let currentUserId = 'test-user-123';
+        let allTransactions = []; // Store all transactions for filtering
 
         // Load transactions on page load
         window.addEventListener('DOMContentLoaded', () => {
@@ -311,6 +360,7 @@
             document.getElementById('empty').style.display = 'none';
             document.getElementById('transactionsTable').style.display = 'none';
             document.getElementById('stats').style.display = 'none';
+            document.getElementById('filterInfo').style.display = 'none';
 
             try {
                 const response = await fetch(`/api/transactions/${encodeURIComponent(userId)}`);
@@ -320,8 +370,13 @@
                     throw new Error(result.error?.message || 'Failed to load transactions');
                 }
 
-                const transactions = result.data.transactions || [];
-                displayTransactions(transactions);
+                allTransactions = result.data.transactions || [];
+                
+                // Populate filter dropdowns
+                populateFilters(allTransactions);
+                
+                // Display all transactions initially
+                displayTransactions(allTransactions);
             } catch (error) {
                 showError('Error loading transactions: ' + error.message);
             } finally {
@@ -333,9 +388,201 @@
             loadTransactions();
         }
 
+        // Format date from YYYY-MM-DD to "Dec 20, 2025" format (no timezone issues)
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            // Parse date string directly (YYYY-MM-DD)
+            const [year, month, day] = dateString.split('-').map(Number);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            return `${monthNames[month - 1]} ${day}, ${year}`;
+        }
+
+        // Populate filter dropdowns with available years, months, and days
+        function populateFilters(transactions) {
+            const years = new Set();
+            const months = new Set();
+            const days = new Set();
+
+            transactions.forEach(t => {
+                if (t.date) {
+                    const [year, month, day] = t.date.split('-');
+                    years.add(year);
+                    months.add(`${year}-${month}`);
+                    days.add(`${year}-${month}-${day}`);
+                }
+            });
+
+            // Populate Year dropdown
+            const yearSelect = document.getElementById('filterYear');
+            const currentYearValue = yearSelect.value;
+            yearSelect.innerHTML = '<option value="">All Years</option>';
+            Array.from(years).sort().reverse().forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+            if (currentYearValue) yearSelect.value = currentYearValue;
+
+            // Populate Month dropdown
+            const monthSelect = document.getElementById('filterMonth');
+            const currentMonthValue = monthSelect.value;
+            monthSelect.innerHTML = '<option value="">All Months</option>';
+            const monthMap = {
+                '01': 'January', '02': 'February', '03': 'March', '04': 'April',
+                '05': 'May', '06': 'June', '07': 'July', '08': 'August',
+                '09': 'September', '10': 'October', '11': 'November', '12': 'December'
+            };
+            
+            Array.from(months).sort().reverse().forEach(ym => {
+                const [year, month] = ym.split('-');
+                const option = document.createElement('option');
+                option.value = ym;
+                option.textContent = `${monthMap[month]} ${year}`;
+                monthSelect.appendChild(option);
+            });
+            if (currentMonthValue) monthSelect.value = currentMonthValue;
+
+            // Populate Day dropdown (only show days for selected year/month)
+            updateDayFilter();
+        }
+
+        // Update day filter based on selected year and month
+        function updateDayFilter() {
+            const yearSelect = document.getElementById('filterYear');
+            const monthSelect = document.getElementById('filterMonth');
+            const daySelect = document.getElementById('filterDay');
+            
+            const selectedYear = yearSelect.value;
+            const selectedMonth = monthSelect.value;
+            const currentDayValue = daySelect.value;
+            
+            daySelect.innerHTML = '<option value="">All Days</option>';
+            
+            if (selectedYear && selectedMonth) {
+                const [ymYear, ymMonth] = selectedMonth.split('-');
+                const days = new Set();
+                
+                allTransactions.forEach(t => {
+                    if (t.date) {
+                        const [year, month, day] = t.date.split('-');
+                        if (year === ymYear && month === ymMonth) {
+                            days.add(`${year}-${month}-${day}`);
+                        }
+                    }
+                });
+                
+                Array.from(days).sort().reverse().forEach(dateStr => {
+                    const [year, month, day] = dateStr.split('-');
+                    const option = document.createElement('option');
+                    option.value = dateStr;
+                    option.textContent = `${parseInt(day)}`;
+                    daySelect.appendChild(option);
+                });
+            } else if (selectedYear) {
+                // Show all days for the selected year
+                const days = new Set();
+                allTransactions.forEach(t => {
+                    if (t.date) {
+                        const [year, month, day] = t.date.split('-');
+                        if (year === selectedYear) {
+                            days.add(`${year}-${month}-${day}`);
+                        }
+                    }
+                });
+                
+                Array.from(days).sort().reverse().forEach(dateStr => {
+                    const [year, month, day] = dateStr.split('-');
+                    const monthMap = {
+                        '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr',
+                        '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Aug',
+                        '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
+                    };
+                    const option = document.createElement('option');
+                    option.value = dateStr;
+                    option.textContent = `${monthMap[month]} ${parseInt(day)}`;
+                    daySelect.appendChild(option);
+                });
+            }
+            
+            if (currentDayValue) daySelect.value = currentDayValue;
+        }
+
+        // Add event listeners for filter updates
+        document.getElementById('filterYear').addEventListener('change', updateDayFilter);
+        document.getElementById('filterMonth').addEventListener('change', updateDayFilter);
+
+        // Apply filters
+        function applyFilters() {
+            const selectedYear = document.getElementById('filterYear').value;
+            const selectedMonth = document.getElementById('filterMonth').value;
+            const selectedDay = document.getElementById('filterDay').value;
+
+            let filtered = [...allTransactions];
+
+            if (selectedDay) {
+                filtered = filtered.filter(t => t.date === selectedDay);
+            } else if (selectedMonth) {
+                const [year, month] = selectedMonth.split('-');
+                filtered = filtered.filter(t => {
+                    if (!t.date) return false;
+                    const [tYear, tMonth] = t.date.split('-');
+                    return tYear === year && tMonth === month;
+                });
+            } else if (selectedYear) {
+                filtered = filtered.filter(t => {
+                    if (!t.date) return false;
+                    const [tYear] = t.date.split('-');
+                    return tYear === selectedYear;
+                });
+            }
+
+            displayTransactions(filtered);
+            
+            // Show filter info
+            const filterInfo = document.getElementById('filterInfo');
+            if (selectedYear || selectedMonth || selectedDay) {
+                let filterText = 'Showing filtered results: ';
+                const parts = [];
+                if (selectedYear) parts.push(`Year: ${selectedYear}`);
+                if (selectedMonth) {
+                    const [y, m] = selectedMonth.split('-');
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    parts.push(`Month: ${monthNames[parseInt(m) - 1]} ${y}`);
+                }
+                if (selectedDay) {
+                    const [y, m, d] = selectedDay.split('-');
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    parts.push(`Date: ${monthNames[parseInt(m) - 1]} ${parseInt(d)}, ${y}`);
+                }
+                filterText += parts.join(', ');
+                filterText += ` (${filtered.length} of ${allTransactions.length} transactions)`;
+                filterInfo.textContent = filterText;
+                filterInfo.style.display = 'block';
+            } else {
+                filterInfo.style.display = 'none';
+            }
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('filterYear').value = '';
+            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterDay').value = '';
+            document.getElementById('filterInfo').style.display = 'none';
+            displayTransactions(allTransactions);
+        }
+
         function displayTransactions(transactions) {
             if (transactions.length === 0) {
                 document.getElementById('empty').style.display = 'block';
+                document.getElementById('transactionsTable').style.display = 'none';
+                document.getElementById('stats').style.display = 'none';
                 return;
             }
 
@@ -348,13 +595,9 @@
             transactions.forEach(transaction => {
                 const row = document.createElement('tr');
                 
-                // Format date
-                const date = new Date(transaction.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-
+                // Format date using the new function (no timezone issues)
+                const date = formatDate(transaction.date);
+                
                 // Format amount
                 const amount = parseFloat(transaction.amount);
                 const formattedAmount = '$' + amount.toFixed(2);
@@ -392,6 +635,7 @@
 
             document.getElementById('stats').style.display = 'grid';
             document.getElementById('transactionsTable').style.display = 'table';
+            document.getElementById('empty').style.display = 'none';
         }
 
         function showError(message) {

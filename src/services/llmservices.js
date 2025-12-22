@@ -71,13 +71,32 @@ export const extractTransactionFromText = async (text) => {
     console.log('Calling OpenAI to extract transaction data...');
     console.log('Input text:', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
 
+    // Get current date information for the LLM
+    const today = getTodayDate();
+    const todayDate = new Date();
+    const yesterdayDate = new Date(todayDate);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate.toISOString().split('T')[0];
+
+    // Enhanced system prompt with current date context
+    const enhancedPrompt = `${SYSTEM_PROMPT}
+
+CURRENT DATE CONTEXT (IMPORTANT):
+- Today's date is: ${today} (YYYY-MM-DD)
+- Yesterday's date is: ${yesterday} (YYYY-MM-DD)
+
+When the user says "today", use: ${today}
+When the user says "yesterday", use: ${yesterday}
+When the user says "this week", use a date within the last 7 days from ${today}
+When no date is mentioned, use: ${today}`;
+
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Using cost-effective model, can switch to 'gpt-4' for better accuracy
       messages: [
         {
           role: 'system',
-          content: SYSTEM_PROMPT
+          content: enhancedPrompt
         },
         {
           role: 'user',
@@ -97,6 +116,11 @@ export const extractTransactionFromText = async (text) => {
 
     console.log('OpenAI raw response:', responseContent);
 
+    // Check if user mentioned "today" or "yesterday" - we'll validate the date more strictly
+    const textLower = text.toLowerCase();
+    const mentionsToday = textLower.includes('today');
+    const mentionsYesterday = textLower.includes('yesterday');
+    
     // Parse JSON response
     let transactionData;
     try {
@@ -110,9 +134,8 @@ export const extractTransactionFromText = async (text) => {
     }
 
     // Validate required fields
-        // Validate required fields
-        const requiredFields = ['amount', 'date', 'merchant', 'category', 'type'];
-        const missingFields = requiredFields.filter(field => transactionData[field] === undefined || transactionData[field] === null);
+    const requiredFields = ['amount', 'date', 'merchant', 'category', 'type'];
+    const missingFields = requiredFields.filter(field => transactionData[field] === undefined || transactionData[field] === null);
     
         if (missingFields.length > 0) {
           console.error('LLM Response Data:', JSON.stringify(transactionData, null, 2));
@@ -136,6 +159,75 @@ export const extractTransactionFromText = async (text) => {
         transactionData.date = getTodayDate();
       }
     }
+
+    // Validate and correct date based on user input
+    // Get current date for comparison
+    const todayDateObj = new Date();
+    todayDateObj.setHours(0, 0, 0, 0);
+    const currentYear = todayDateObj.getFullYear();
+    
+    console.log(`Date check - mentionsToday: ${mentionsToday}, mentionsYesterday: ${mentionsYesterday}, LLM date: ${transactionData.date}`);
+    
+    // If user explicitly said "yesterday", ALWAYS use yesterday's date (override LLM completely)
+    if (mentionsYesterday) {
+      const yesterdayDate = new Date(todayDateObj);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      transactionData.date = yesterdayDate.toISOString().split('T')[0];
+      console.log(`✅ OVERRIDE: User said "yesterday", forcing date to: ${transactionData.date}`);
+    }
+    // If user explicitly said "today", ALWAYS use today's date (override LLM completely)
+    else if (mentionsToday) {
+      transactionData.date = today;
+      console.log(`✅ OVERRIDE: User said "today", forcing date to: ${transactionData.date}`);
+    }
+    // Otherwise, validate the LLM's date - if it's clearly wrong, fix it
+    else if (transactionData.date) {
+      const transactionDate = new Date(transactionData.date + 'T00:00:00');
+      transactionDate.setHours(0, 0, 0, 0);
+      const transactionYear = transactionDate.getFullYear();
+      
+      console.log(`Validating LLM date: ${transactionData.date} (year: ${transactionYear}), Current year: ${currentYear}`);
+      
+      // If date is from 2023 or earlier when we're in 2025+, it's definitely wrong
+      if (currentYear >= 2025 && transactionYear < 2025) {
+        console.warn(`⚠️ Date ${transactionData.date} is from ${transactionYear} (we're in ${currentYear}). Using today's date.`);
+        transactionData.date = today;
+      }
+      // Check if date is more than 30 days old (likely wrong for recent transactions)
+      else {
+        const daysDiff = Math.floor((todayDateObj - transactionDate) / (1000 * 60 * 60 * 24));
+        if (daysDiff > 30) {
+          console.warn(`⚠️ Date ${transactionData.date} is ${daysDiff} days old. Using today's date.`);
+          transactionData.date = today;
+        }
+      }
+      
+      // Check if date is in the future (more than 1 day ahead)
+      const tomorrow = new Date(todayDateObj);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      if (transactionDate > tomorrow) {
+        console.warn(`⚠️ Date ${transactionData.date} is in the future. Using today's date.`);
+        transactionData.date = today;
+      }
+    }
+
+    // Final safety check: If date is still from an old year AND we didn't explicitly set it from user input, force today
+    // But DON'T override if user said "yesterday" or "today"
+    if (transactionData.date && !mentionsYesterday && !mentionsToday) {
+      const finalCheck = new Date(transactionData.date + 'T00:00:00');
+      const finalYear = finalCheck.getFullYear();
+      if (currentYear >= 2025 && finalYear < 2025) {
+        console.warn(`⚠️ Final safety: Date ${transactionData.date} (year ${finalYear}) is wrong for year ${currentYear}. Using today.`);
+        transactionData.date = today;
+      }
+    }
+    
+    // If date is still missing or invalid, use today's date
+    if (!transactionData.date) {
+      transactionData.date = today;
+    }
+    
+    console.log(`✅ FINAL transaction date set to: ${transactionData.date}`);
 
     // Set defaults for optional fields
     transactionData.currency = transactionData.currency || 'USD';

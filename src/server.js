@@ -1,9 +1,15 @@
 // src/server.js
 import express from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import chatRoutes from './routes/chat.js';
 import { errorHandler } from './utils/errors.js';
 import { checkAWSConfig } from './config/aws.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.join(__dirname, '..');
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +23,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(express.static(path.join(rootDir, 'public'))); // Serve static files from public folder
 
 // CORS middleware (enable if needed for frontend)
 app.use((req, res, next) => {
@@ -43,7 +50,8 @@ app.get('/', (req, res) => {
       chat: 'POST /api/chat',
       upload: 'POST /api/chat/upload',
       transactions: 'GET /api/transactions/:userId',
-      health: 'GET /api/health'
+      health: 'GET /api/health',
+      view: 'GET /transactions.html?userId=YOUR_USER_ID'
     }
   });
 });
@@ -77,6 +85,8 @@ const startServer = async () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`📍 API endpoints available at http://localhost:${PORT}/api`);
       console.log(`💡 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`📊 View transactions: http://localhost:${PORT}/transactions.html`);
+      console.log(`📄 Upload receipt: http://localhost:${PORT}/upload.html`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
