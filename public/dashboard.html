@@ -158,6 +158,25 @@
             font-size: 0.9em;
         }
 
+        .summary-card .month-change {
+            margin-top: 8px;
+            font-size: 0.85em;
+            font-weight: 500;
+            display: none;
+        }
+
+        .summary-card .month-change.show {
+            display: block;
+        }
+
+        .summary-card .month-change.increase {
+            color: #dc3545;
+        }
+
+        .summary-card .month-change.decrease {
+            color: #28a745;
+        }
+
         .charts-section {
             padding: 30px;
         }
@@ -255,6 +274,7 @@
                     <h3>Total Expenses</h3>
                     <div class="value" id="monthlyExpenses">$0.00</div>
                     <div class="period">This Month</div>
+                    <div class="month-change" id="expensesMonthChange"></div>
                 </div>
                 <div class="summary-card income">
                     <h3>Total Income</h3>
@@ -386,6 +406,15 @@
                 }
             });
 
+            // Calculate month-over-month change for expenses
+            const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const previousMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            const previousMonthKey = `${previousMonthYear}-${String(previousMonth + 1).padStart(2, '0')}`;
+            const previousMonthExpenses = monthlyData[previousMonthKey]?.expenses || 0;
+            
+            // Update month-over-month change indicator
+            updateExpensesMonthChange(monthlyExpenses, previousMonthExpenses);
+
             // Update summary cards
             document.getElementById('monthlyExpenses').textContent = '$' + monthlyExpenses.toFixed(2);
             document.getElementById('monthlyIncome').textContent = '$' + monthlyIncome.toFixed(2);
@@ -412,6 +441,37 @@
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return `${monthNames[month - 1]} ${year}`;
+        }
+
+        function updateExpensesMonthChange(currentExpenses, previousExpenses) {
+            const changeElement = document.getElementById('expensesMonthChange');
+            
+            // Hide if no previous month data
+            if (!previousExpenses || previousExpenses === 0) {
+                changeElement.classList.remove('show', 'increase', 'decrease');
+                return;
+            }
+
+            // Calculate change
+            const change = currentExpenses - previousExpenses;
+            const changePercent = ((change / previousExpenses) * 100).toFixed(1);
+            const changeAmount = Math.abs(change).toFixed(2);
+
+            // Determine if increase or decrease
+            if (change > 0) {
+                // Increase: show in red with up arrow
+                changeElement.textContent = `↑ $${changeAmount} (${changePercent}%) vs last month`;
+                changeElement.classList.add('show', 'increase');
+                changeElement.classList.remove('decrease');
+            } else if (change < 0) {
+                // Decrease: show in green with down arrow
+                changeElement.textContent = `↓ $${changeAmount} (${changePercent}%) vs last month`;
+                changeElement.classList.add('show', 'decrease');
+                changeElement.classList.remove('increase');
+            } else {
+                // No change: hide
+                changeElement.classList.remove('show', 'increase', 'decrease');
+            }
         }
 
         function createExpensesTrendChart(labels, expensesData) {
