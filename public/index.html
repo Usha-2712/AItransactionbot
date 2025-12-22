@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Transaction Bot - Smart Transaction Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-size: 1.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Main Container */
+        .main-container {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .hero h1 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            height: 600px;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            font-size: 1.5em;
+        }
+
+        .user-id-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-id-section input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            width: 200px;
+        }
+
+        .user-id-section label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* Messages Area */
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background: white;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #10b981;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #dc3545;
+        }
+
+        .message.loading {
+            background: #e0e7ff;
+            color: #3730a3;
+            border-color: #6366f1;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        /* Helper Text */
+        .helper-text {
+            text-align: center;
+            color: white;
+            margin: 20px 0;
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .helper-example {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 25px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-area button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-area button:active {
+            transform: translateY(0);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #6c757d;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .example-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .example-message {
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+            color: #495057;
+        }
+
+        .example-message:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .example-message:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .hero h1 {
+                font-size: 2em;
+            }
+
+            .hero p {
+                font-size: 1em;
+            }
+
+            .chat-container {
+                height: calc(100vh - 250px);
+            }
+
+            .chat-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .user-id-section {
+                width: 100%;
+            }
+
+            .user-id-section input {
+                flex: 1;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .example-messages {
+                max-width: 100%;
+                padding: 0 10px;
+            }
+
+            .empty-state-text {
+                font-size: 1em;
+            }
+
+            .input-area {
+                flex-direction: column;
+            }
+
+            .input-area button {
+                width: 100%;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .messages-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">💰 AI Transaction Bot</div>
+            <ul class="nav-links">
+                <li><a href="/">Chat</a></li>
+                <li><a href="/upload.html">Upload Receipt</a></li>
+                <li><a href="/transactions.html">Transactions</a></li>
+                <li><a href="/transactions.html">Dashboard</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>Smart Transaction Management</h1>
+            <p>Record your transactions effortlessly using natural language</p>
+        </div>
+
+        <!-- Helper Text -->
+        <div class="helper-text">
+            <div>Type a transaction like:</div>
+            <div class="helper-example">"Spent $12.50 at Starbucks yesterday"</div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>💬 Transaction Chatbot</h2>
+                <div class="user-id-section">
+                    <label for="userIdInput">User ID:</label>
+                    <input type="text" id="userIdInput" placeholder="e.g., test-user-123" value="test-user-123">
+                </div>
+            </div>
+
+            <div class="messages-area" id="messagesArea">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-state-icon">💬</div>
+                    <div class="empty-state-text">Try these examples to get started:</div>
+                    <div class="example-messages">
+                        <div class="example-message" onclick="sendExampleMessage('Spent $18 at Uber yesterday')">
+                            "Spent $18 at Uber yesterday"
+                        </div>
+                        <div class="example-message" onclick="sendExampleMessage('Got paid $2,000 salary today')">
+                            "Got paid $2,000 salary today"
+                        </div>
+                        <div class="example-message" onclick="sendExampleMessage('Bought groceries for $75')">
+                            "Bought groceries for $75"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Type your transaction here... (e.g., Spent $25.50 at Target today)"
+                    autocomplete="off"
+                >
+                <button id="sendButton" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const userIdInput = document.getElementById('userIdInput');
+
+        // Remove empty state when first message is sent
+        let hasMessages = false;
+
+        // Function to send example message
+        function sendExampleMessage(message) {
+            messageInput.value = message;
+            sendMessage();
+        }
+
+        // Allow Enter key to send message
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-focus input on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if userId is in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('userId');
+            if (userId) {
+                userIdInput.value = userId;
+            }
+            messageInput.focus();
+        });
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            const userId = userIdInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            if (!userId) {
+                showBotMessage('Please enter a User ID before sending a message.', 'error');
+                return;
+            }
+
+            // Clear input
+            messageInput.value = '';
+
+            // Remove empty state
+            if (!hasMessages) {
+                const emptyState = document.getElementById('emptyState');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                hasMessages = true;
+            }
+
+            // Show user message
+            addMessage(message, 'user');
+
+            // Disable input and button
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Show loading message
+            const loadingId = addMessage('Processing transaction...', 'bot loading');
+
+            // Send to API
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userId,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove loading message
+                removeMessage(loadingId);
+
+                if (data.success) {
+                    // Show success message
+                    const transaction = data.data.transaction;
+                    const responseMessage = data.data.message;
+                    
+                    let botMessage = responseMessage;
+                    if (data.data.isDuplicate) {
+                        botMessage += ' ⚠️ (This transaction may be a duplicate)';
+                    }
+
+                    addMessage(botMessage, 'bot success');
+
+                    // Optionally show transaction details
+                    if (transaction) {
+                        const details = `\n📊 Transaction Details:\n` +
+                                      `   Amount: $${transaction.amount.toFixed(2)}\n` +
+                                      `   Merchant: ${transaction.merchant}\n` +
+                                      `   Category: ${transaction.category}\n` +
+                                      `   Date: ${transaction.date}\n` +
+                                      `   Type: ${transaction.type}`;
+                        addMessage(details, 'bot');
+                    }
+
+                    // Add link to view transactions
+                    const viewTransactionsHTML = `<a href="/transactions.html?userId=${encodeURIComponent(userId)}" target="_blank" style="color: #667eea; text-decoration: underline; font-weight: 600;">👁️ View all transactions →</a>`;
+                    const linkMessageDiv = document.createElement('div');
+                    linkMessageDiv.className = 'message bot';
+                    linkMessageDiv.id = 'msg-' + Date.now() + '-' + Math.random();
+                    const linkTextDiv = document.createElement('div');
+                    linkTextDiv.innerHTML = viewTransactionsHTML;
+                    const linkTimeDiv = document.createElement('div');
+                    linkTimeDiv.className = 'message-time';
+                    linkTimeDiv.textContent = new Date().toLocaleTimeString();
+                    linkMessageDiv.appendChild(linkTextDiv);
+                    linkMessageDiv.appendChild(linkTimeDiv);
+                    messagesArea.appendChild(linkMessageDiv);
+                    messagesArea.scrollTop = messagesArea.scrollHeight;
+                } else {
+                    // Show error message
+                    const errorMsg = data.error?.message || 'An error occurred while processing your transaction.';
+                    addMessage(`❌ Error: ${errorMsg}`, 'bot error');
+                }
+            })
+            .catch(error => {
+                // Remove loading message
+                removeMessage(loadingId);
+
+                // Show error
+                addMessage(`❌ Error: ${error.message || 'Failed to connect to server. Please try again.'}`, 'bot error');
+            })
+            .finally(() => {
+                // Re-enable input and button
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.focus();
+            });
+        }
+
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.id = 'msg-' + Date.now() + '-' + Math.random();
+            
+            const textDiv = document.createElement('div');
+            textDiv.textContent = text;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = new Date().toLocaleTimeString();
+            
+            messageDiv.appendChild(textDiv);
+            messageDiv.appendChild(timeDiv);
+            
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+
+            return messageDiv.id;
+        }
+
+        function removeMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            if (messageElement) {
+                messageElement.remove();
+            }
+        }
+
+        function showBotMessage(text, type = 'bot') {
+            if (!hasMessages) {
+                const emptyState = document.getElementById('emptyState');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                hasMessages = true;
+            }
+            addMessage(text, type);
+        }
+    </script>
+</body>
+</html>
+

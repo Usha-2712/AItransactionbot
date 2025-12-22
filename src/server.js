@@ -40,21 +40,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api', chatRoutes);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'AI Transaction Bot API',
-    version: '1.0.0',
-    endpoints: {
-      chat: 'POST /api/chat',
-      upload: 'POST /api/chat/upload',
-      transactions: 'GET /api/transactions/:userId',
-      health: 'GET /api/health',
-      view: 'GET /transactions.html?userId=YOUR_USER_ID'
-    }
-  });
-});
+// Note: Root endpoint (/) will automatically serve index.html from the public folder
 
 // 404 handler
 app.use((req, res, next) => {
@@ -83,6 +69,7 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`🏠 Landing page: http://localhost:${PORT}/`);
       console.log(`📍 API endpoints available at http://localhost:${PORT}/api`);
       console.log(`💡 Health check: http://localhost:${PORT}/api/health`);
       console.log(`📊 View transactions: http://localhost:${PORT}/transactions.html`);
