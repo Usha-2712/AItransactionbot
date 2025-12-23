@@ -94,6 +94,24 @@
             background: #5a6268;
         }
 
+        .controls a {
+            padding: 10px 25px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: background 0.3s;
+            display: inline-block;
+        }
+
+        .controls a.nav-link {
+            background: #667eea;
+        }
+
+        .controls a.nav-link:hover {
+            background: #5568d3;
+        }
+
         .filter-label {
             font-weight: 600;
             color: #495057;
@@ -131,24 +149,29 @@
 
         .table-container {
             overflow-x: auto;
-            padding: 30px;
+            padding: 0;
             position: relative;
             max-height: calc(100vh - 400px);
             overflow-y: auto;
+            background: white;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 0.95em;
+            background: white;
         }
 
         thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 100;
+        }
+
+        thead tr {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         th {
@@ -158,9 +181,44 @@
             text-transform: uppercase;
             font-size: 0.85em;
             letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 102;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        th:first-child {
+            padding-left: 30px;
+        }
+
+        th:last-child {
+            padding-right: 30px;
+        }
+
+        td:first-child {
+            padding-left: 30px;
+        }
+
+        td:last-child {
+            padding-right: 30px;
+        }
+
+        tbody tr:last-child td {
+            padding-bottom: 30px;
+        }
+
+        thead th {
+            padding-top: 30px;
+        }
+
+        tbody {
+            background: white;
         }
 
         tbody tr {
+            background: white;
             border-bottom: 1px solid #dee2e6;
             transition: background 0.2s;
         }
@@ -172,6 +230,7 @@
         td {
             padding: 15px;
             color: #495057;
+            background: inherit;
         }
 
         .badge {
@@ -337,6 +396,7 @@
 
         <div class="controls">
             <div class="controls-row">
+                <a href="/" class="nav-link">← Return to Chat</a>
                 <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
                 <button onclick="loadTransactions()">Load Transactions</button>
                 <button onclick="refreshTransactions()">🔄 Refresh</button>
