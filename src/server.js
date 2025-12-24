@@ -23,7 +23,6 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(express.static(path.join(rootDir, 'public'))); // Serve static files from public folder
 
 // CORS middleware (enable if needed for frontend)
 app.use((req, res, next) => {
@@ -40,10 +39,13 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api', chatRoutes);
 
-// Serve mainpage.html at root endpoint
+// Serve mainpage.html at root endpoint (must be before static middleware)
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'public', 'mainpage.html'));
 });
+
+// Serve static files from public folder (after specific routes)
+app.use(express.static(path.join(rootDir, 'public'), { index: false }));
 
 // Note: Root endpoint (/) now serves mainpage.html from the public folder
 
