@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - AI Transaction Bot</title>
+    <link rel="stylesheet" href="/css/theme.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -12,27 +13,34 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        body.bg-home {
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur-lg);
+            -webkit-backdrop-filter: var(--blur-lg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
             overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
             color: white;
             padding: 30px;
             text-align: center;
+            position: relative;
         }
 
         .header h1 {
@@ -45,10 +53,35 @@
             opacity: 0.9;
         }
 
+        .return-home {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+        }
+
+        .return-home a {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .return-home a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-3px);
+        }
+
         .controls {
             padding: 20px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             gap: 15px;
             align-items: center;
@@ -57,41 +90,54 @@
 
         .controls input {
             padding: 10px 15px;
-            border: 2px solid #dee2e6;
+            border: 2px solid var(--border-color);
             border-radius: 5px;
             font-size: 1em;
             flex: 1;
             min-width: 200px;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .controls input:focus {
+            outline: none;
+            border-color: var(--primary-color);
         }
 
         .controls button {
             padding: 10px 25px;
-            background: #667eea;
+            background: var(--primary-color);
             color: white;
             border: none;
             border-radius: 5px;
             font-size: 1em;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            font-weight: 500;
         }
 
         .controls button:hover {
-            background: #5568d3;
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
 
         .controls a {
             padding: 10px 25px;
-            background: #10b981;
+            background: var(--success-color);
             color: white;
             text-decoration: none;
             border-radius: 5px;
             font-size: 1em;
-            transition: background 0.3s;
+            transition: all 0.3s;
             display: inline-block;
+            font-weight: 500;
         }
 
         .controls a:hover {
-            background: #059669;
+            background: var(--success-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
 
         .summary-cards {
@@ -99,36 +145,38 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             padding: 30px;
-            background: #f8f9fa;
+            background: rgba(248, 249, 250, 0.5);
         }
 
         .summary-card {
-            background: white;
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur-md);
+            -webkit-backdrop-filter: var(--blur-md);
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .summary-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow-lg);
         }
 
         .summary-card.expense {
-            border-left: 4px solid #dc3545;
+            border-left: 4px solid var(--danger-color);
         }
 
         .summary-card.income {
-            border-left: 4px solid #28a745;
+            border-left: 4px solid var(--success-color);
         }
 
         .summary-card.balance {
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--primary-color);
         }
 
         .summary-card h3 {
-            color: #6c757d;
+            color: var(--text-secondary);
             font-size: 0.9em;
             text-transform: uppercase;
             margin-bottom: 10px;
@@ -142,19 +190,19 @@
         }
 
         .summary-card.expense .value {
-            color: #dc3545;
+            color: var(--danger-color);
         }
 
         .summary-card.income .value {
-            color: #28a745;
+            color: var(--success-color);
         }
 
         .summary-card.balance .value {
-            color: #667eea;
+            color: var(--primary-color);
         }
 
         .summary-card .period {
-            color: #6c757d;
+            color: var(--text-secondary);
             font-size: 0.9em;
         }
 
@@ -170,28 +218,30 @@
         }
 
         .summary-card .month-change.increase {
-            color: #dc3545;
+            color: var(--danger-color);
         }
 
         .summary-card .month-change.decrease {
-            color: #28a745;
+            color: var(--success-color);
         }
 
         .insight-section {
             padding: 0 30px 30px 30px;
-            background: #f8f9fa;
+            background: rgba(248, 249, 250, 0.5);
         }
 
         .insight-card {
-            background: white;
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur-md);
+            -webkit-backdrop-filter: var(--blur-md);
             padding: 20px 25px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--primary-color);
         }
 
         .insight-card h3 {
-            color: #495057;
+            color: var(--text-primary);
             font-size: 1em;
             margin-bottom: 12px;
             font-weight: 600;
@@ -200,14 +250,14 @@
         }
 
         .insight-card .insight-content {
-            color: #6c757d;
+            color: var(--text-secondary);
             font-size: 0.95em;
             line-height: 1.6;
             font-style: italic;
         }
 
         .insight-card .insight-loading {
-            color: #adb5bd;
+            color: var(--text-light);
         }
 
         .charts-section {
@@ -222,18 +272,20 @@
         }
 
         .chart-container {
-            background: white;
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur-md);
+            -webkit-backdrop-filter: var(--blur-md);
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
         }
 
         .chart-container h2 {
-            color: #495057;
+            color: var(--text-primary);
             font-size: 1.3em;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #dee2e6;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .chart-wrapper {
@@ -244,7 +296,7 @@
         .loading {
             text-align: center;
             padding: 50px;
-            color: #6c757d;
+            color: var(--text-secondary);
             font-size: 1.2em;
         }
 
@@ -260,12 +312,40 @@
         .empty {
             text-align: center;
             padding: 50px;
-            color: #6c757d;
+            color: var(--text-secondary);
         }
 
         @media (max-width: 768px) {
+            body.bg-home {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
             .header h1 {
                 font-size: 1.8em;
+                margin-top: 50px;
+            }
+
+            .return-home {
+                top: 15px;
+                left: 15px;
+            }
+
+            .return-home a {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+
+            .controls {
+                padding: 15px;
+            }
+
+            .summary-cards {
+                padding: 20px 15px;
+                grid-template-columns: 1fr;
             }
 
             .charts-grid {
@@ -279,15 +359,27 @@
             .summary-card .value {
                 font-size: 2em;
             }
+
+            .charts-section {
+                padding: 20px 15px;
+            }
+
+            .insight-section {
+                padding: 0 15px 20px 15px;
+            }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Dashboard</h1>
-            <p>Financial Overview & Analytics</p>
-        </div>
+<body class="bg-home">
+    <div class="main-container">
+        <div class="container">
+            <div class="header">
+                <div class="return-home">
+                    <a href="/home.html">← Return to Home</a>
+                </div>
+                <h1>📊 Dashboard</h1>
+                <p>Financial Overview & Analytics</p>
+            </div>
 
         <div class="controls">
             <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
@@ -351,6 +443,7 @@
         <div id="empty" class="empty" style="display: none;">
             <h2>No Transactions Found</h2>
             <p>Start by creating transactions to see your dashboard analytics.</p>
+        </div>
         </div>
     </div>
 
