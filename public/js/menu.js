@@ -11,7 +11,15 @@ const MenuManager = {
 
     // Setup event listeners
     setupEventListeners() {
-        // Hamburger click - toggle menu
+        // Hamburger menu click on home.html - redirect to menu.html
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        if (hamburgerMenu) {
+            hamburgerMenu.addEventListener('click', function() {
+                window.location.href = '/menu.html';
+            });
+        }
+
+        // Hamburger click - toggle menu (for menu.html page)
         const hamburger = document.querySelector('.hamburger');
         if (hamburger) {
             hamburger.addEventListener('click', (e) => {

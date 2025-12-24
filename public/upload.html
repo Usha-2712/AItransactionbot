@@ -19,6 +19,12 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            /* Background image and overlay handled by theme.css */
+        }
+
+        /* Remove overlay from upload page background */
+        body.bg-home::before {
+            display: none;
         }
 
         .main-container {
@@ -350,12 +356,16 @@
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📄 Upload Receipt</h1>
-            <p>Extract transaction from receipt image using OCR</p>
-        </div>
+<body class="bg-home">
+    <div class="main-container">
+        <div class="container">
+            <div class="header">
+                <div class="return-home">
+                    <a href="/home.html">← Return to Home</a>
+                </div>
+                <h1>📄 Upload Receipt</h1>
+                <p>Extract transaction from receipt image using OCR</p>
+            </div>
 
         <div class="form-container">
             <form id="uploadForm" enctype="multipart/form-data">
@@ -377,7 +387,7 @@
 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
-                    <p style="margin-top: 15px; color: #6c757d;">Processing receipt with OCR...</p>
+                    <p style="margin-top: 15px; color: var(--text-secondary);">Processing receipt with OCR...</p>
                 </div>
 
                 <div class="result" id="result">
@@ -395,6 +405,7 @@
             <div class="back-link">
                 <a href="/transactions.html">← View Transaction History</a>
             </div>
+        </div>
         </div>
     </div>
 

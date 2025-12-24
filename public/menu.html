@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu - AI Transaction Bot</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <style>
+        /* Menu Page Specific Styles */
+        body.bg-menu {
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+            /* Ensure background image covers full screen */
+            background-color: #f8f9fa; /* Fallback solid color */
+            background-image: url('/assets/menu-bg.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        /* Remove overlay from menu page background */
+        body.bg-menu::before {
+            display: none;
+        }
+
+        /* Ensure background works on mobile */
+        @media (max-width: 768px) {
+            body.bg-menu {
+                background-attachment: scroll; /* Better performance on mobile */
+            }
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        /* Close Button */
+        .menu-close-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            color: var(--text-primary);
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .menu-close-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: rotate(90deg);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 60px;
+            padding: 40px 20px;
+            min-height: calc(100vh - 60px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Menu Card */
+        .menu-card {
+            width: 90%;
+            max-width: 500px;
+            background: var(--bg-white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        .menu-card h2 {
+            font-size: 2em;
+            color: var(--text-primary);
+            margin: 0 0 30px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .menu-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .menu-nav-item {
+            display: block;
+            padding: 18px 25px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-md);
+            font-family: inherit;
+        }
+
+        .menu-nav-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+        }
+
+        .menu-nav-item:active {
+            transform: translateY(-1px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .top-bar {
+                height: 50px;
+                padding: 0 15px;
+            }
+
+            .menu-close-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.3em;
+            }
+
+            .main-content {
+                margin-top: 50px;
+                padding: 30px 15px;
+            }
+
+            .menu-card {
+                padding: 40px 30px;
+            }
+
+            .menu-card h2 {
+                font-size: 1.5em;
+            }
+
+            .menu-nav-item {
+                padding: 15px 20px;
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .menu-card {
+                padding: 30px 20px;
+            }
+
+            .menu-card h2 {
+                font-size: 1.3em;
+                margin-bottom: 25px;
+            }
+
+            .menu-nav-item {
+                padding: 14px 18px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-menu">
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <a href="/home.html" class="menu-close-btn" id="closeMenuBtn" aria-label="Close Menu">×</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="menu-card">
+            <h2>Menu</h2>
+            <nav class="menu-nav">
+                <a href="/transactions.html" class="menu-nav-item">Transactions</a>
+                <a href="/dashboard.html" class="menu-nav-item">Dashboard</a>
+                <a href="/upload.html" class="menu-nav-item">Upload</a>
+            </nav>
+        </div>
+    </div>
+</body>
+</html>

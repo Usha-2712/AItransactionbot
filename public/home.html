@@ -13,6 +13,11 @@
             position: relative;
         }
 
+        /* Remove overlay from home page background */
+        body.bg-home::before {
+            display: none;
+        }
+
         /* Top Bar */
         .top-bar {
             position: fixed;
@@ -25,33 +30,26 @@
             -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             padding: 0 20px;
             z-index: 1000;
         }
 
         /* Hamburger Menu Icon */
-        .hamburger {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 5px;
+        .hamburger-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
             cursor: pointer;
-            transition: transform 0.3s;
+            z-index: 1001;
         }
 
-        .hamburger:hover {
-            transform: scale(1.1);
-        }
-
-        .hamburger span {
-            display: block;
-            width: 100%;
-            height: 3px;
-            background: var(--text-primary);
+        .hamburger-menu .line {
+            width: 30px;
+            height: 4px;
+            margin: 6px 0;
+            background-color: #333;
             border-radius: 2px;
             transition: all 0.3s;
         }
@@ -135,31 +133,41 @@
 
         /* Profile Panel */
         .profile-panel {
-            position: fixed;
-            top: 0;
-            right: -450px;
-            width: 450px;
-            height: 100vh;
+            position: absolute;
+            top: 55px;
+            right: 0;
+            width: 400px;
+            max-height: calc(100vh - 80px);
             background: var(--glass-bg-heavy);
             backdrop-filter: var(--blur-lg);
             -webkit-backdrop-filter: var(--blur-lg);
-            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            box-shadow: var(--shadow-xl);
             z-index: 2000;
-            transition: right 0.3s ease;
             overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
         }
 
         .profile-panel.show {
-            right: 0;
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
         .profile-panel-header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
             color: white;
-            padding: 25px;
+            padding: 20px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-radius: 15px 15px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         .profile-panel-header h2 {
@@ -329,24 +337,6 @@
             transform: translateX(0);
         }
 
-        /* Panel Overlay */
-        .profile-panel-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 1999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-
-        .profile-panel-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
 
         /* Main Content Area */
         .main-content {
@@ -681,124 +671,143 @@
             }
         }
 
-        /* Menu Overlay */
-        .menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('/assets/menu-bg.jpg');
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            z-index: 1500;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .menu-overlay::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--overlay-dark);
-            z-index: 0;
-        }
-
-        .menu-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .menu-close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 255, 255, 0.2);
+        /* Footer */
+        .footer {
+            background: rgba(30, 30, 30, 0.95);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 40px 20px 20px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-brand {
+            font-size: 1.3em;
+            font-weight: 600;
             color: white;
-            font-size: 1.5em;
-            font-weight: bold;
-            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .social-icon {
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1502;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
             transition: all 0.3s;
-        }
-
-        .menu-close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: rotate(90deg);
-        }
-
-        .menu-card {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 90%;
-            max-width: 500px;
-            background: var(--bg-white);
-            border-radius: 20px;
-            box-shadow: var(--shadow-xl);
-            padding: 50px 40px;
-            z-index: 1501;
-            opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-
-        .menu-overlay.show .menu-card {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-
-        .menu-card h2 {
-            font-size: 2em;
-            color: var(--text-primary);
-            margin: 0 0 30px 0;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .menu-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .menu-nav-item {
-            display: block;
-            padding: 18px 25px;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-            color: white;
+            cursor: pointer;
             text-decoration: none;
-            border-radius: 12px;
-            font-size: 1.1em;
-            font-weight: 600;
+        }
+
+        .social-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .social-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .footer-legal {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-legal-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-legal-links li {
+            margin: 0;
+        }
+
+        .footer-legal-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .footer-legal-links a:hover {
+            color: white;
+        }
+
+        .footer-legal-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        .footer-legal-links a:hover::after {
+            width: 100%;
+        }
+
+        .footer-copyright {
             text-align: center;
-            transition: all 0.3s;
-            box-shadow: var(--shadow-md);
+            padding-top: 20px;
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.6);
         }
 
-        .menu-nav-item:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-        }
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 25px;
+            }
 
-        .menu-nav-item:active {
-            transform: translateY(-1px);
+            .footer-brand {
+                font-size: 1.1em;
+            }
+
+            .footer-social {
+                justify-content: center;
+            }
+
+            .footer-legal-links {
+                gap: 20px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -807,9 +816,15 @@
                 padding: 0 15px;
             }
 
-            .hamburger {
+            .hamburger-menu {
+                top: 15px;
+                left: 15px;
+            }
+
+            .hamburger-menu .line {
                 width: 25px;
-                height: 25px;
+                height: 3px;
+                margin: 5px 0;
             }
 
             .profile-avatar {
@@ -824,8 +839,9 @@
             }
 
             .profile-panel {
-                width: 100%;
-                right: -100%;
+                width: calc(100vw - 30px);
+                max-width: 400px;
+                right: 0;
             }
 
             .profile-dropdown {
@@ -854,16 +870,43 @@
                 right: 15px;
                 font-size: 1.3em;
             }
+
+            .footer {
+                padding: 30px 15px 15px;
+            }
+
+            .footer-content {
+                gap: 20px;
+            }
+
+            .footer-social {
+                gap: 15px;
+            }
+
+            .social-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .social-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .footer-legal-links {
+                gap: 15px;
+                font-size: 0.85em;
+            }
         }
     </style>
 </head>
 <body class="bg-home">
     <!-- Top Bar -->
     <div class="top-bar">
-        <div class="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div id="hamburger-menu" class="hamburger-menu">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
         </div>
         <div style="position: relative;">
             <div class="profile-avatar" id="profileAvatar">
@@ -879,99 +922,82 @@
                     🚪 Logout
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Menu Overlay -->
-    <div class="menu-overlay" id="menuOverlay">
-        <button class="menu-close-btn" id="closeMenuBtn">×</button>
-        <div class="menu-card">
-            <h2>Menu</h2>
-            <nav class="menu-nav">
-                <a href="/transactions.html" class="menu-nav-item">Transactions</a>
-                <a href="/dashboard.html" class="menu-nav-item">Dashboard</a>
-                <a href="/upload.html" class="menu-nav-item">Upload</a>
-            </nav>
-        </div>
-    </div>
-
-    <!-- Profile Panel Overlay -->
-    <div class="profile-panel-overlay" id="profilePanelOverlay"></div>
-
-    <!-- Profile Panel -->
-    <div class="profile-panel" id="profilePanel">
-        <div class="profile-panel-header">
-            <h2>Profile</h2>
-            <button class="profile-panel-close" id="closeProfileBtn">×</button>
-        </div>
-        <div class="profile-panel-body">
-            <!-- Profile Image Section -->
-            <div class="profile-image-section">
-                <div class="profile-image-wrapper">
-                    <img id="profileImagePreview" class="profile-image-preview" alt="Profile">
-                    <div class="profile-image-placeholder" id="profileImagePlaceholder">U</div>
+            <!-- Profile Panel (appears below icon) -->
+            <div class="profile-panel" id="profilePanel">
+                <div class="profile-panel-header">
+                    <h2>Profile</h2>
+                    <button class="profile-panel-close" id="closeProfileBtn">×</button>
                 </div>
-                <label for="profileImageInput" class="profile-image-upload-btn">
-                    Upload Image
-                </label>
-                <input type="file" id="profileImageInput" class="profile-image-input" accept="image/*">
+                <div class="profile-panel-body">
+                    <!-- Profile Image Section -->
+                    <div class="profile-image-section">
+                        <div class="profile-image-wrapper">
+                            <img id="profileImagePreview" class="profile-image-preview" alt="Profile">
+                            <div class="profile-image-placeholder" id="profileImagePlaceholder">U</div>
+                        </div>
+                        <label for="profileImageInput" class="profile-image-upload-btn">
+                            Upload Image
+                        </label>
+                        <input type="file" id="profileImageInput" class="profile-image-input" accept="image/*">
+                    </div>
+
+                    <!-- Profile Form -->
+                    <form id="profileForm">
+                        <div class="profile-form-group">
+                            <label for="profileFirstName">First Name *</label>
+                            <input 
+                                type="text" 
+                                id="profileFirstName" 
+                                required
+                                autocomplete="given-name"
+                            >
+                        </div>
+
+                        <div class="profile-form-group">
+                            <label for="profileLastName">Last Name *</label>
+                            <input 
+                                type="text" 
+                                id="profileLastName" 
+                                required
+                                autocomplete="family-name"
+                            >
+                        </div>
+
+                        <div class="profile-form-group">
+                            <label for="profileEmail">Email *</label>
+                            <input 
+                                type="email" 
+                                id="profileEmail" 
+                                required
+                                autocomplete="email"
+                            >
+                        </div>
+
+                        <div class="profile-form-group">
+                            <label for="profileAddress">Address</label>
+                            <textarea 
+                                id="profileAddress" 
+                                autocomplete="street-address"
+                            ></textarea>
+                        </div>
+
+                        <div class="profile-form-group">
+                            <label for="profileContact">Contact Number</label>
+                            <input 
+                                type="tel" 
+                                id="profileContact" 
+                                autocomplete="tel"
+                            >
+                        </div>
+
+                        <div class="profile-form-actions">
+                            <button type="button" class="profile-save-btn" id="saveProfileBtn">
+                                Save Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <!-- Profile Form -->
-            <form id="profileForm">
-                <div class="profile-form-group">
-                    <label for="profileFirstName">First Name *</label>
-                    <input 
-                        type="text" 
-                        id="profileFirstName" 
-                        required
-                        autocomplete="given-name"
-                    >
-                </div>
-
-                <div class="profile-form-group">
-                    <label for="profileLastName">Last Name *</label>
-                    <input 
-                        type="text" 
-                        id="profileLastName" 
-                        required
-                        autocomplete="family-name"
-                    >
-                </div>
-
-                <div class="profile-form-group">
-                    <label for="profileEmail">Email *</label>
-                    <input 
-                        type="email" 
-                        id="profileEmail" 
-                        required
-                        autocomplete="email"
-                    >
-                </div>
-
-                <div class="profile-form-group">
-                    <label for="profileAddress">Address</label>
-                    <textarea 
-                        id="profileAddress" 
-                        autocomplete="street-address"
-                    ></textarea>
-                </div>
-
-                <div class="profile-form-group">
-                    <label for="profileContact">Contact Number</label>
-                    <input 
-                        type="tel" 
-                        id="profileContact" 
-                        autocomplete="tel"
-                    >
-                </div>
-
-                <div class="profile-form-actions">
-                    <button type="button" class="profile-save-btn" id="saveProfileBtn">
-                        Save Profile
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -984,42 +1010,87 @@
     </div>
 
     <!-- Floating Chat Widget -->
-    <div class="chat-widget">
-        <!-- Chat Button (Collapsed) -->
-        <button class="chat-button collapsed" id="chatButton" onclick="toggleChat()">
-            Let's Chat
-        </button>
+    <div id="chatbot-widget">
+        <button id="chatbot-toggle">Let's Chat...</button>
+        <div id="chatbot-panel" class="hidden">
+            <div id="chatbot-inner">
+                <!-- Chat Button (Collapsed) -->
+                <button class="chat-button collapsed" id="chatButton" onclick="toggleChat()">
+                    Let's Chat
+                </button>
 
-        <!-- Chat Container (Expanded) -->
-        <div class="chat-container" id="chatContainer">
-            <div class="chat-header">
-                <h3>💬 Transaction Chatbot</h3>
-                <button class="chat-close" onclick="toggleChat()">×</button>
-            </div>
+                <!-- Chat Container (Expanded) -->
+                <div class="chat-container" id="chatContainer">
+                    <div class="chat-header">
+                        <h3>💬 Transaction Chatbot</h3>
+                        <button class="chat-close" onclick="toggleChat()">×</button>
+                    </div>
 
-            <div class="user-id-section">
-                <label for="userIdInput">User ID:</label>
-                <input type="text" id="userIdInput" placeholder="e.g., test-user-123" value="test-user-123">
-            </div>
+                    <div class="user-id-section">
+                        <label for="userIdInput">User ID:</label>
+                        <input type="text" id="userIdInput" placeholder="e.g., test-user-123" value="test-user-123">
+                    </div>
 
-            <div class="messages-area" id="messagesArea">
-                <div class="empty-state">
-                    <div class="empty-state-icon">💬</div>
-                    <div>Start a conversation by typing a transaction below</div>
+                    <div class="messages-area" id="messagesArea">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💬</div>
+                            <div>Start a conversation by typing a transaction below</div>
+                        </div>
+                    </div>
+
+                    <div class="input-area">
+                        <textarea 
+                            id="messageInput" 
+                            rows="1"
+                            placeholder="Type your transaction here... (e.g., Spent $25.50 at Target today)"
+                            autocomplete="off"
+                        ></textarea>
+                        <button id="sendButton" onclick="sendMessage()">Send</button>
+                    </div>
                 </div>
-            </div>
-
-            <div class="input-area">
-                <textarea 
-                    id="messageInput" 
-                    rows="1"
-                    placeholder="Type your transaction here... (e.g., Spent $25.50 at Target today)"
-                    autocomplete="off"
-                ></textarea>
-                <button id="sendButton" onclick="sendMessage()">Send</button>
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">AI Transaction Bot</div>
+            <div class="footer-social">
+                <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                </a>
+                <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                </a>
+                <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                    </svg>
+                </a>
+                <a href="mailto:contact@aitransactionbot.com" class="social-icon" aria-label="Email">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+        <div class="footer-legal">
+            <ul class="footer-legal-links">
+                <li><a href="#privacy">Privacy Policy</a></li>
+                <li><a href="#terms">Terms of Service</a></li>
+                <li><a href="#cookies">Cookie Policy</a></li>
+                <li><a href="#contact">Contact Us</a></li>
+            </ul>
+        </div>
+        <div class="footer-copyright">
+            &copy; 2025 AI Transaction Bot. All rights reserved.
+        </div>
+    </footer>
 
     <script>
         // Chat Widget Toggle
@@ -1037,7 +1108,6 @@
             }
         }
 
-        // Menu toggle is handled by menu.js
 
         // Chatbot Functionality
         const messagesArea = document.getElementById('messagesArea');
@@ -1199,11 +1269,33 @@
         });
     </script>
 
-    <!-- Menu Management Script -->
-    <script src="/js/menu.js"></script>
-
     <!-- Profile Management Script -->
     <script src="/js/profile.js"></script>
+
+    <!-- Chatbot Widget Toggle -->
+    <script>
+        (function() {
+            const toggleBtn = document.getElementById('chatbot-toggle');
+            const panel = document.getElementById('chatbot-panel');
+            
+            if (toggleBtn && panel) {
+                toggleBtn.addEventListener('click', function() {
+                    const isHidden = panel.classList.contains('hidden');
+                    
+                    if (isHidden) {
+                        panel.classList.remove('hidden');
+                        toggleBtn.textContent = 'Close';
+                    } else {
+                        panel.classList.add('hidden');
+                        toggleBtn.textContent = 'Let\'s Chat...';
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <!-- Menu Management Script -->
+    <script src="/js/menu.js"></script>
 </body>
 </html>
 

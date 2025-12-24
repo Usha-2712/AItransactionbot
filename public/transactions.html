@@ -16,6 +16,12 @@
             min-height: 100vh;
             padding: 20px;
             position: relative;
+            /* Background image and overlay handled by theme.css */
+        }
+
+        /* Remove overlay from transactions page background */
+        body.bg-home::before {
+            display: none;
         }
 
         .main-container {

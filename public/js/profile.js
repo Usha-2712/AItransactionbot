@@ -32,7 +32,8 @@ const ProfileManager = {
         // Profile menu item click
         const profileMenuItem = document.getElementById('profileMenuItem');
         if (profileMenuItem) {
-            profileMenuItem.addEventListener('click', () => {
+            profileMenuItem.addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.closeDropdown();
                 this.showProfilePanel();
             });
@@ -41,26 +42,39 @@ const ProfileManager = {
         // Logout menu item click
         const logoutMenuItem = document.getElementById('logoutMenuItem');
         if (logoutMenuItem) {
-            logoutMenuItem.addEventListener('click', () => {
-                this.handleLogout();
+            logoutMenuItem.style.cursor = 'pointer';
+            logoutMenuItem.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeDropdown();
+                // Use setTimeout to ensure dropdown closes before redirect
+                setTimeout(() => {
+                    this.handleLogout();
+                }, 100);
             });
         }
 
         // Close profile panel button
         const closeProfileBtn = document.getElementById('closeProfileBtn');
         if (closeProfileBtn) {
-            closeProfileBtn.addEventListener('click', () => {
+            closeProfileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.hideProfilePanel();
             });
         }
 
-        // Profile panel overlay click
-        const profilePanelOverlay = document.getElementById('profilePanelOverlay');
-        if (profilePanelOverlay) {
-            profilePanelOverlay.addEventListener('click', () => {
-                this.hideProfilePanel();
-            });
-        }
+        // Close profile panel when clicking outside
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('profilePanel');
+            const avatar = document.querySelector('.profile-avatar');
+            
+            if (panel && panel.classList.contains('show')) {
+                // Check if click is outside the panel and outside the avatar
+                if (!panel.contains(e.target) && !avatar.contains(e.target)) {
+                    this.hideProfilePanel();
+                }
+            }
+        });
 
         // Save profile button
         const saveProfileBtn = document.getElementById('saveProfileBtn');
@@ -98,10 +112,8 @@ const ProfileManager = {
     // Show profile panel
     showProfilePanel() {
         const panel = document.getElementById('profilePanel');
-        const overlay = document.getElementById('profilePanelOverlay');
         if (panel) {
             panel.classList.add('show');
-            if (overlay) overlay.classList.add('show');
             this.loadProfileToForm();
         }
     },
@@ -109,12 +121,8 @@ const ProfileManager = {
     // Hide profile panel
     hideProfilePanel() {
         const panel = document.getElementById('profilePanel');
-        const overlay = document.getElementById('profilePanelOverlay');
         if (panel) {
             panel.classList.remove('show');
-        }
-        if (overlay) {
-            overlay.classList.remove('show');
         }
     },
 
@@ -290,11 +298,23 @@ const ProfileManager = {
 
     // Handle logout
     handleLogout() {
-        // Clear profile data from localStorage (optional - you may want to keep it)
-        // localStorage.removeItem('userProfile');
-        
-        // Redirect to login page
-        window.location.href = '/login.html';
+        try {
+            // Clear user data from localStorage
+            localStorage.removeItem('userProfile');
+            
+            // Clear session data from sessionStorage
+            sessionStorage.removeItem('googleUser');
+            sessionStorage.removeItem('googleAccessToken');
+            sessionStorage.removeItem('oauthUserData');
+            sessionStorage.removeItem('userSession');
+            
+            // Redirect to login page
+            window.location.href = '/login.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Still redirect even if clearing storage fails
+            window.location.href = '/login.html';
+        }
     },
 
     // Show notification

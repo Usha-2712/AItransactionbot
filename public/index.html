@@ -19,28 +19,11 @@
             padding: 20px;
         }
 
-        /* Minimal Navigation */
-        .landing-nav {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
+        /* Remove blue overlay from landing page background */
+        body.bg-landing::before {
+            display: none;
         }
 
-        .landing-nav a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: background 0.3s;
-            font-weight: 500;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .landing-nav a:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
 
         /* Hero Section */
         .landing-hero {
@@ -87,16 +70,6 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .landing-nav {
-                top: 15px;
-                right: 15px;
-            }
-
-            .landing-nav a {
-                padding: 8px 15px;
-                font-size: 0.9em;
-            }
-
             .hero-heading {
                 font-size: 3.5em;
             }
@@ -116,23 +89,14 @@
                 font-size: 1em;
                 margin-bottom: 25px;
             }
-
-            .landing-nav {
-                top: 10px;
-                right: 10px;
-            }
         }
     </style>
 </head>
 <body class="bg-landing">
-    <!-- Minimal Navigation -->
-    <nav class="landing-nav">
-        <a href="/dashboard.html">Dashboard</a>
-    </nav>
 
     <!-- Hero Section -->
     <div class="landing-hero">
-        <h1 class="hero-heading">AI Transaction Bot</h1>
+        <h1 class="hero-heading">AI transaction Bot</h1>
         <p class="hero-subheading">Record your transactions effortlessly</p>
         <div class="hero-cta">
             <a href="/login.html" class="btn btn-primary btn-lg">Get Started</a>

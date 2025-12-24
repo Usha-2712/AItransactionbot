@@ -17,6 +17,12 @@
             min-height: 100vh;
             padding: 20px;
             position: relative;
+            /* Background image and overlay handled by theme.css */
+        }
+
+        /* Remove overlay from dashboard page background */
+        body.bg-home::before {
+            display: none;
         }
 
         .main-container {
@@ -385,7 +391,6 @@
             <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
             <button onclick="window.loadDashboard()">Load Dashboard</button>
             <a href="/transactions.html">📋 View Transactions</a>
-            <a href="/">💬 Chat</a>
             <a href="/upload.html">📄 Upload Receipt</a>
         </div>
 
