@@ -70,7 +70,7 @@ AItransactionbot/
 │ │ └── validation.js
 │ └── server.js
 ├── public/
-│ ├── index.html
+│ ├── mainpage.html
 │ ├── upload.html
 │ ├── transactions.html
 │ ├── dashboard.html

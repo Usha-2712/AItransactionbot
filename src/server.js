@@ -40,7 +40,12 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api', chatRoutes);
 
-// Note: Root endpoint (/) will automatically serve index.html from the public folder
+// Serve mainpage.html at root endpoint
+app.get('/', (req, res) => {
+  res.sendFile(path.join(rootDir, 'public', 'mainpage.html'));
+});
+
+// Note: Root endpoint (/) now serves mainpage.html from the public folder
 
 // 404 handler
 app.use((req, res, next) => {
