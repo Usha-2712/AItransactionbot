@@ -1,12 +1,13 @@
 // src/services/transactionService.js
-import { extractTextFromImage, extractTextFromBuffer, cleanupImageFile } from './ocrServices.js';
-import { extractTransactionFromText } from './llmServices.js';
+import { extractTextFromImage, extractTextFromBuffer, cleanupImageFile } from './services./ocrServices.js';
+import { extractTransactionFromText } from './services/llmServices.js';
+
 import { 
   createTransaction, 
   checkForDuplicates, 
   getUserTransactions,
   getTransaction 
-} from './dynamodbService.js';
+} from './services./dynamodbService.js';
 import { validateTransaction, validateUserId } from '../utils/validation.js';
 import { ValidationError } from '../utils/errors.js';
 
