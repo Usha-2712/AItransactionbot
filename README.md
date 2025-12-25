@@ -3,7 +3,8 @@
 A full-stack web app that lets users record transactions by chatting in natural language or uploading receipt images. The system uses OCR + an LLM to extract structured transaction data, validates it, prevents duplicates, stores it in DynamoDB, and displays history + analytics in a simple dashboard.
 
 ---
-
+## demo video - link
+https://youtu.be/U4NHH2ImYfg
 ## Screenshots
 
 ### 1. Landing Page
