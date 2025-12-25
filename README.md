@@ -19,7 +19,7 @@ A full-stack web app that lets users record transactions by chatting in natural 
 ![Dashboard Page](dashboardpage.png)
 
 ### 5. Upload Receipt Page
-![Upload Receipt Page](uploadreceipt page.png)
+![Upload Receipt Page](uploadreceiptpage.png)
 
 ---
 
