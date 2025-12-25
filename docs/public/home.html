@@ -468,6 +468,29 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
+        .user-id-section {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-id-section label {
+            display: block;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .user-id-section input {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            background: white;
+            color: var(--text-primary);
+        }
+
         .messages-area {
             flex: 1;
             overflow-y: auto;
@@ -1003,8 +1026,16 @@
                         <button class="chat-close" onclick="toggleChat()">×</button>
                     </div>
 
+                    <div class="user-id-section">
+                        <label for="userIdInput">User ID:</label>
+                        <input type="text" id="userIdInput" placeholder="e.g., test-user-123" value="test-user-123">
+                    </div>
+
                     <div class="messages-area" id="messagesArea">
-                        <!-- Sample transactions will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💬</div>
+                            <div>Start a conversation by typing a transaction below</div>
+                        </div>
                     </div>
 
                     <div class="input-area">
@@ -1062,14 +1093,6 @@
     </footer>
 
     <script>
-        // Chatbot Functionality - Initialize variables first
-        const messagesArea = document.getElementById('messagesArea');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const defaultUserId = 'default-user'; // Default user ID
-        let hasMessages = false;
-        let samplesLoaded = false; // Track if samples have been loaded
-
         // Chat Widget Toggle
         function toggleChat() {
             const chatContainer = document.getElementById('chatContainer');
@@ -1082,21 +1105,16 @@
             } else {
                 chatContainer.classList.add('expanded');
                 chatButton.style.display = 'none';
-                
-                // Load sample transactions when chat is first opened
-                if (!samplesLoaded && !hasMessages) {
-                    setTimeout(() => {
-                        loadSampleTransactions();
-                        samplesLoaded = true;
-                    }, 300);
-                }
-                
-                // Focus input when chat opens
-                setTimeout(() => {
-                    messageInput.focus();
-                }, 300);
             }
         }
+
+
+        // Chatbot Functionality
+        const messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const userIdInput = document.getElementById('userIdInput');
+        let hasMessages = false;
 
         // Auto-resize textarea
         function autoResizeTextarea() {
@@ -1119,9 +1137,13 @@
         // Send message function
         function sendMessage() {
             let message = messageInput.value.trim();
-            const userId = defaultUserId;
+            const userId = userIdInput.value.trim();
 
             if (!message) return;
+            if (!userId) {
+                showBotMessage('Please enter a User ID before sending a message.', 'bot error');
+                return;
+            }
 
             messageInput.value = '';
             messageInput.style.height = 'auto';
@@ -1237,35 +1259,14 @@
             });
         }
 
-        // Load sample transactions on page load
-        function loadSampleTransactions() {
-            const examples = [
-                "Spent $12.50 at Starbucks yesterday",
-                "Received $500 salary from work on Monday",
-                "Bought groceries at Whole Foods for $85.25 today"
-            ];
-
-            // Add example messages as user messages (for display only)
-            examples.forEach((example, index) => {
-                setTimeout(() => {
-                    addMessage(example, 'user');
-                    if (index === examples.length - 1) {
-                        // After last example, add a helpful message
-                        setTimeout(() => {
-                            addMessage("💡 Try it yourself! Type a transaction like the examples above.", 'bot');
-                        }, 500);
-                    }
-                }, index * 400);
-            });
-
-            hasMessages = true;
-        }
-
-        // Load samples if chat is already expanded on page load (if user refreshes with chat open)
-        if (document.getElementById('chatContainer').classList.contains('expanded') && !hasMessages) {
-            loadSampleTransactions();
-            samplesLoaded = true;
-        }
+        // Focus input when chat opens
+        document.getElementById('chatButton').addEventListener('click', () => {
+            setTimeout(() => {
+                if (document.getElementById('chatContainer').classList.contains('expanded')) {
+                    messageInput.focus();
+                }
+            }, 300);
+        });
     </script>
 
     <!-- Profile Management Script -->

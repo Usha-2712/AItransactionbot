@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - AI Transaction Bot</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body.bg-home {
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            /* Background image and overlay handled by theme.css */
+        }
+
+        /* Remove overlay from transactions page background */
+        body.bg-home::before {
+            display: none;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur-lg);
+            -webkit-backdrop-filter: var(--blur-lg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .controls-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .controls input, .controls select {
+            padding: 10px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1em;
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .controls input:focus, .controls select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .controls button {
+            padding: 10px 25px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .controls button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .controls button.secondary {
+            background: var(--text-secondary);
+        }
+
+        .controls button.secondary:hover {
+            background: #5a6268;
+        }
+
+        .controls a {
+            padding: 10px 25px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: all 0.3s;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .controls a.nav-link {
+            background: var(--primary-color);
+        }
+
+        .controls a.nav-link:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .controls a.success-link {
+            background: var(--success-color);
+        }
+
+        .controls a.success-link:hover {
+            background: var(--success-dark);
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 80px;
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: rgba(248, 249, 250, 0.5);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-card {
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur-md);
+            -webkit-backdrop-filter: var(--blur-md);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            padding: 0;
+            position: relative;
+            max-height: calc(100vh - 400px);
+            overflow-y: auto;
+            background: var(--glass-bg-heavy);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.95em;
+            background: var(--glass-bg-heavy);
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        thead tr {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 102;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        th:first-child {
+            padding-left: 30px;
+        }
+
+        th:last-child {
+            padding-right: 30px;
+        }
+
+        td:first-child {
+            padding-left: 30px;
+        }
+
+        td:last-child {
+            padding-right: 30px;
+        }
+
+        tbody tr:last-child td {
+            padding-bottom: 30px;
+        }
+
+        thead th {
+            padding-top: 30px;
+        }
+
+        tbody {
+            background: var(--glass-bg-heavy);
+        }
+
+        tbody tr {
+            background: var(--glass-bg-heavy);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        td {
+            padding: 15px;
+            color: var(--text-primary);
+            background: inherit;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-expense {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-income {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-confirmed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .amount-expense {
+            color: var(--danger-color);
+            font-weight: 600;
+            background: rgba(220, 53, 69, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .amount-income {
+            color: var(--success-color);
+            font-weight: 600;
+            background: rgba(40, 167, 69, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-secondary);
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 30px;
+            color: var(--text-secondary);
+            background: var(--bg-light);
+            border-radius: 8px;
+            margin: 20px;
+        }
+
+        .empty-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .empty p {
+            font-size: 1.1em;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .empty-actions {
+            margin-top: 25px;
+        }
+
+        .empty-actions a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        .empty-actions a:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .empty-actions a.secondary {
+            background: var(--text-secondary);
+        }
+
+        .empty-actions a.secondary:hover {
+            background: #5a6268;
+        }
+
+        .filter-info {
+            padding: 10px 30px;
+            background: #e7f3ff;
+            border-bottom: 1px solid var(--border-color);
+            color: #004085;
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 768px) {
+            body.bg-home {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+                margin-top: 50px;
+            }
+
+            .return-home {
+                top: 15px;
+                left: 15px;
+            }
+
+            .return-home a {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+
+            .controls {
+                padding: 15px;
+            }
+
+            .stats {
+                padding: 15px;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            table {
+                font-size: 0.85em;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .empty {
+                padding: 40px 20px;
+                margin: 10px;
+            }
+
+            .empty-icon {
+                font-size: 4em;
+            }
+
+            .empty h2 {
+                font-size: 1.3em;
+            }
+
+            .amount-expense,
+            .amount-income {
+                padding: 3px 6px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body class="bg-home">
+    <div class="main-container">
+        <div class="container">
+            <div class="header">
+                <div class="return-home">
+                    <a href="/home.html">← Return to Home</a>
+                </div>
+                <h1>💰 Transaction History</h1>
+                <p>AI Transaction Bot - View all your transactions</p>
+            </div>
+
+        <div class="controls">
+            <div class="controls-row">
+                <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., test-user-123)" value="test-user-123">
+                <button onclick="loadTransactions()">Load Transactions</button>
+                <button onclick="refreshTransactions()">🔄 Refresh</button>
+                <a href="/upload.html" class="success-link">📄 Upload Receipt</a>
+            </div>
+            <div class="controls-row">
+                <span class="filter-label">Filter:</span>
+                <select id="filterYear">
+                    <option value="">All Years</option>
+                </select>
+                <select id="filterMonth">
+                    <option value="">All Months</option>
+                </select>
+                <select id="filterDay">
+                    <option value="">All Days</option>
+                </select>
+                <button onclick="applyFilters()" class="secondary">Apply Filter</button>
+                <button onclick="clearFilters()" class="secondary">Clear Filters</button>
+            </div>
+        </div>
+
+        <div class="filter-info" id="filterInfo" style="display: none;"></div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <h3>Total Transactions</h3>
+                <div class="value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Expenses</h3>
+                <div class="value amount-expense" id="totalExpenses">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Income</h3>
+                <div class="value amount-income" id="totalIncome">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Net Balance</h3>
+                <div class="value" id="netBalance">$0.00</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="loading" class="loading">Loading transactions...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="empty" class="empty" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <h2>No Transactions Found</h2>
+                <p id="emptyMessage">Start by creating your first transaction using the chat interface or upload a receipt!</p>
+                <div class="empty-actions">
+                    <a href="/mainpage.html">💬 Start Chat</a>
+                    <a href="/upload.html" class="secondary">📄 Upload Receipt</a>
+                </div>
+            </div>
+            <table id="transactionsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Merchant</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                        <th>Transaction ID</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = 'test-user-123';
+        let allTransactions = []; // Store all transactions for filtering
+
+        // Initialize static filter dropdowns
+        function initializeFilters() {
+            // Initialize Year dropdown (2025-2035)
+            const yearSelect = document.getElementById('filterYear');
+            for (let year = 2035; year >= 2025; year--) {
+                const option = document.createElement('option');
+                option.value = year.toString();
+                option.textContent = year.toString();
+                yearSelect.appendChild(option);
+            }
+
+            // Initialize Month dropdown (Jan-Dec)
+            const monthSelect = document.getElementById('filterMonth');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            monthNames.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = (index + 1).toString().padStart(2, '0');
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            });
+
+            // Initialize Day dropdown (1-31)
+            const daySelect = document.getElementById('filterDay');
+            for (let day = 1; day <= 31; day++) {
+                const option = document.createElement('option');
+                option.value = day.toString().padStart(2, '0');
+                option.textContent = day.toString();
+                daySelect.appendChild(option);
+            }
+        }
+
+        // Load transactions on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Initialize filter dropdowns
+            initializeFilters();
+            
+            // Add event listeners for auto-filtering when dropdowns change
+            document.getElementById('filterYear').addEventListener('change', applyFilters);
+            document.getElementById('filterMonth').addEventListener('change', applyFilters);
+            document.getElementById('filterDay').addEventListener('change', applyFilters);
+            
+            // Check if userId is in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('userId');
+            if (userId) {
+                document.getElementById('userIdInput').value = userId;
+                currentUserId = userId;
+            }
+            loadTransactions();
+        });
+
+        async function loadTransactions() {
+            const userId = document.getElementById('userIdInput').value.trim();
+            if (!userId) {
+                showError('Please enter a User ID');
+                return;
+            }
+
+            currentUserId = userId;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('empty').style.display = 'none';
+            document.getElementById('transactionsTable').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('filterInfo').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/transactions/${encodeURIComponent(userId)}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error?.message || 'Failed to load transactions');
+                }
+
+                allTransactions = result.data.transactions || [];
+                
+                // Display all transactions initially (filters will auto-apply via event listeners)
+                applyFilters();
+            } catch (error) {
+                showError('Error loading transactions: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function refreshTransactions() {
+            loadTransactions();
+        }
+
+        // Format date from YYYY-MM-DD to "Dec 20, 2025" format (no timezone issues)
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            // Parse date string directly (YYYY-MM-DD)
+            const [year, month, day] = dateString.split('-').map(Number);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            return `${monthNames[month - 1]} ${day}, ${year}`;
+        }
+
+
+        // Apply filters
+        function applyFilters() {
+            // Don't filter if allTransactions is empty
+            if (!allTransactions || allTransactions.length === 0) {
+                return;
+            }
+
+            const selectedYear = document.getElementById('filterYear').value;
+            const selectedMonth = document.getElementById('filterMonth').value;
+            const selectedDay = document.getElementById('filterDay').value;
+
+            let filtered = [...allTransactions];
+
+            // Apply filters: Year, Month, and Day are combined with AND logic
+            if (selectedYear || selectedMonth || selectedDay) {
+                filtered = filtered.filter(t => {
+                    if (!t.date) return false;
+                    const [tYear, tMonth, tDay] = t.date.split('-');
+                    
+                    // Check year filter
+                    if (selectedYear && tYear !== selectedYear) return false;
+                    
+                    // Check month filter (selectedMonth is '01'-'12', needs to match tMonth)
+                    if (selectedMonth && tMonth !== selectedMonth) return false;
+                    
+                    // Check day filter (selectedDay is '01'-'31', needs to match tDay)
+                    if (selectedDay && tDay !== selectedDay) return false;
+                    
+                    return true;
+                });
+            }
+
+            displayTransactions(filtered);
+            
+            // Show filter info
+            const filterInfo = document.getElementById('filterInfo');
+            if (selectedYear || selectedMonth || selectedDay) {
+                let filterText = 'Showing filtered results: ';
+                const parts = [];
+                if (selectedYear) parts.push(`Year: ${selectedYear}`);
+                if (selectedMonth) {
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                       'July', 'August', 'September', 'October', 'November', 'December'];
+                    parts.push(`Month: ${monthNames[parseInt(selectedMonth) - 1]}`);
+                }
+                if (selectedDay) {
+                    parts.push(`Day: ${parseInt(selectedDay)}`);
+                }
+                filterText += parts.join(', ');
+                filterText += ` (${filtered.length} of ${allTransactions.length} transactions)`;
+                filterInfo.textContent = filterText;
+                filterInfo.style.display = 'block';
+            } else {
+                filterInfo.style.display = 'none';
+            }
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('filterYear').value = '';
+            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterDay').value = '';
+            document.getElementById('filterInfo').style.display = 'none';
+            displayTransactions(allTransactions);
+        }
+
+        function displayTransactions(transactions) {
+            if (transactions.length === 0) {
+                const emptyDiv = document.getElementById('empty');
+                const emptyMessage = document.getElementById('emptyMessage');
+                
+                // Update empty state message based on filters
+                const selectedYear = document.getElementById('filterYear').value;
+                const selectedMonth = document.getElementById('filterMonth').value;
+                const selectedDay = document.getElementById('filterDay').value;
+                
+                if (selectedYear || selectedMonth || selectedDay) {
+                    emptyMessage.textContent = 'No transactions found for the selected filters. Try adjusting your filters or clear them to see all transactions.';
+                } else {
+                    emptyMessage.textContent = 'Start by creating your first transaction using the chat interface or upload a receipt!';
+                }
+                
+                emptyDiv.style.display = 'block';
+                document.getElementById('transactionsTable').style.display = 'none';
+                document.getElementById('stats').style.display = 'none';
+                return;
+            }
+
+            const tbody = document.getElementById('transactionsBody');
+            tbody.innerHTML = '';
+
+            let totalExpenses = 0;
+            let totalIncome = 0;
+
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                // Format date using timezone-safe function (YYYY-MM-DD to readable format)
+                const date = formatDate(transaction.date);
+                
+                // Format amount with proper highlighting
+                const amount = parseFloat(transaction.amount);
+                const formattedAmount = '$' + amount.toFixed(2);
+                const amountClass = transaction.type === 'income' ? 'amount-income' : 'amount-expense';
+
+                if (transaction.type === 'expense') {
+                    totalExpenses += amount;
+                } else {
+                    totalIncome += amount;
+                }
+
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td><span class="badge badge-${transaction.type}">${transaction.type}</span></td>
+                    <td><strong>${transaction.merchant || '-'}</strong></td>
+                    <td>${transaction.category || '-'}</td>
+                    <td class="${amountClass}">${formattedAmount}</td>
+                    <td>${transaction.description || '-'}</td>
+                    <td><span class="badge badge-confirmed">${transaction.status || 'confirmed'}</span></td>
+                    <td>${transaction.source || 'manual'}</td>
+                    <td style="font-size: 0.85em; color: #6c757d;">${transaction.transactionID || transaction.transactionId || '-'}</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            // Update stats
+            document.getElementById('totalCount').textContent = transactions.length;
+            document.getElementById('totalExpenses').textContent = '$' + totalExpenses.toFixed(2);
+            document.getElementById('totalIncome').textContent = '$' + totalIncome.toFixed(2);
+            const netBalance = totalIncome - totalExpenses;
+            const netClass = netBalance >= 0 ? 'amount-income' : 'amount-expense';
+            document.getElementById('netBalance').textContent = '$' + netBalance.toFixed(2);
+            document.getElementById('netBalance').className = 'value ' + netClass;
+
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('transactionsTable').style.display = 'table';
+            document.getElementById('empty').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+
+        // Allow Enter key to load transactions
+        document.getElementById('userIdInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadTransactions();
+            }
+        });
+    </script>
+</body>
+</html>

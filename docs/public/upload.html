@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Receipt - AI Transaction Bot</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body.bg-home {
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            /* Background image and overlay handled by theme.css */
+        }
+
+        /* Remove overlay from upload page background */
+        body.bg-home::before {
+            display: none;
+        }
+
+        .main-container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .container {
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur-lg);
+            -webkit-backdrop-filter: var(--blur-lg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .return-home {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+        }
+
+        .return-home a {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .return-home a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-3px);
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .file-info {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .upload-button {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .upload-button:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .upload-button:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            display: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d1fae5;
+            border: 2px solid var(--success-color);
+            color: #065f46;
+        }
+
+        .result.error {
+            background: #fee2e2;
+            border: 2px solid var(--danger-color);
+            color: #991b1b;
+        }
+
+        .result.warning {
+            background: #fef3c7;
+            border: 2px solid var(--warning-color);
+            color: #92400e;
+        }
+
+        .result h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .transaction-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .transaction-details.warning-border {
+            border-top-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: inherit;
+            opacity: 0.8;
+        }
+
+        .detail-value {
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .detail-value.amount {
+            font-size: 1.1em;
+            color: #10b981;
+        }
+
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .action-button.primary {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .action-button.primary:hover {
+            background: var(--success-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-button.secondary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .action-button.secondary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .back-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .supported-formats {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            body.bg-home {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+                margin-top: 50px;
+            }
+
+            .return-home {
+                top: 15px;
+                left: 15px;
+            }
+
+            .return-home a {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+
+            .form-container {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-home">
+    <div class="main-container">
+        <div class="container">
+            <div class="header">
+                <div class="return-home">
+                    <a href="/home.html">← Return to Home</a>
+                </div>
+                <h1>📄 Upload Receipt</h1>
+                <p>Extract transaction from receipt image using OCR</p>
+            </div>
+
+        <div class="form-container">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="userId">User ID</label>
+                    <input type="text" id="userId" name="userId" value="test-user-123" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="fileInput">Receipt Image</label>
+                    <input type="file" id="fileInput" name="file" accept="image/jpeg,image/jpg,image/png,application/pdf" required>
+                    <div class="supported-formats">Supported formats: JPEG, PNG, PDF (Max 10MB)</div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+
+                <div class="preview-container">
+                    <img id="previewImage" class="preview-image" alt="Receipt preview">
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px; color: var(--text-secondary);">Processing receipt with OCR...</p>
+                </div>
+
+                <div class="result" id="result">
+                    <h3 id="resultTitle"></h3>
+                    <p id="resultMessage"></p>
+                    <div id="resultDetails"></div>
+                    <div class="action-buttons" id="actionButtons" style="display: none;"></div>
+                </div>
+
+                <button type="submit" class="upload-button" id="uploadButton">
+                    📤 Upload & Process Receipt
+                </button>
+            </form>
+
+            <div class="back-link">
+                <a href="/transactions.html">← View Transaction History</a>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const previewImage = document.getElementById('previewImage');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadForm = document.getElementById('uploadForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const uploadButton = document.getElementById('uploadButton');
+
+        // Preview image when selected
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Show file info
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                fileInfo.textContent = `Selected: ${file.name} (${fileSize} MB)`;
+
+                // Preview image (if it's an image, not PDF)
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImage.src = e.target.result;
+                        previewImage.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewImage.style.display = 'none';
+                }
+
+                // Validate file size (10MB limit)
+                if (file.size > 10 * 1024 * 1024) {
+                    showError('File size exceeds 10MB limit. Please choose a smaller file.');
+                    uploadButton.disabled = true;
+                } else {
+                    uploadButton.disabled = false;
+                }
+            } else {
+                fileInfo.textContent = '';
+                previewImage.style.display = 'none';
+            }
+        });
+
+        // Handle form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userId = document.getElementById('userId').value.trim();
+            const file = fileInput.files[0];
+
+            if (!userId) {
+                showError('Please enter a User ID');
+                return;
+            }
+
+            if (!file) {
+                showError('Please select a receipt image');
+                return;
+            }
+
+            // Show loading, hide result
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            uploadButton.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('userId', userId);
+                formData.append('file', file);
+
+                // POST to /api/chat/upload
+                const response = await fetch('/api/chat/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Handle response errors
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `Server error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                loading.style.display = 'none';
+                uploadButton.disabled = false;
+
+                if (data.success) {
+                    if (data.data.isDuplicate) {
+                        showWarning(
+                            'Duplicate Transaction Detected',
+                            data.data.message,
+                            data.data.transaction || data.data.duplicateTransaction,
+                            userId
+                        );
+                    } else {
+                        showSuccess(
+                            'Transaction Recorded Successfully!',
+                            data.data.message,
+                            data.data.transaction,
+                            userId
+                        );
+                        // Clear form after successful upload
+                        fileInput.value = '';
+                        previewImage.style.display = 'none';
+                        fileInfo.textContent = '';
+                    }
+                } else {
+                    // Handle validation or processing errors
+                    const errorMsg = data.error?.message || 'Unknown error occurred';
+                    showError(errorMsg, data.error?.type);
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                uploadButton.disabled = false;
+                
+                // Handle different error types gracefully
+                let errorMessage = 'Failed to process receipt. ';
+                
+                if (error.message.includes('OCR') || error.message.includes('Textract')) {
+                    errorMessage += 'OCR service error: Unable to extract text from the image. Please ensure the image is clear and readable.';
+                } else if (error.message.includes('validation') || error.message.includes('Validation')) {
+                    errorMessage += error.message;
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                    errorMessage += 'Network error: Please check your connection and try again.';
+                } else if (error.message.includes('size') || error.message.includes('10MB')) {
+                    errorMessage += 'File too large: Please use an image smaller than 10MB.';
+                } else {
+                    errorMessage += error.message || 'An unexpected error occurred.';
+                }
+                
+                showError(errorMessage, 'OCR');
+            }
+        });
+
+        /**
+         * Display successful transaction extraction and confirmation
+         * @param {string} title - Success title
+         * @param {string} message - Confirmation message
+         * @param {Object} transaction - Extracted transaction data
+         * @param {string} userId - User identifier
+         */
+        function showSuccess(title, message, transaction, userId) {
+            result.className = 'result success';
+            result.style.display = 'block';
+            document.getElementById('resultTitle').textContent = '✅ ' + title;
+            document.getElementById('resultMessage').textContent = message;
+            
+            // Display extracted transaction fields clearly
+            if (transaction) {
+                const details = formatTransactionDetails(transaction, 'success');
+                document.getElementById('resultDetails').innerHTML = details;
+            } else {
+                document.getElementById('resultDetails').innerHTML = '';
+            }
+
+            // Add "View Transactions" button
+            const actionButtons = document.getElementById('actionButtons');
+            actionButtons.innerHTML = `
+                <a href="/transactions.html?userId=${encodeURIComponent(userId)}" class="action-button primary" target="_blank">
+                    👁️ View Transactions
+                </a>
+                <button type="button" class="action-button secondary" onclick="resetForm()">
+                    📄 Upload Another Receipt
+                </button>
+            `;
+            actionButtons.style.display = 'flex';
+        }
+
+        /**
+         * Display error message gracefully
+         * @param {string} message - Error message
+         * @param {string} errorType - Type of error (OCR, Validation, etc.)
+         */
+        function showError(message, errorType = '') {
+            result.className = 'result error';
+            result.style.display = 'block';
+            
+            // Customize error title based on error type
+            let errorTitle = '❌ Error';
+            if (errorType === 'OCR' || message.includes('OCR') || message.includes('Textract')) {
+                errorTitle = '🔍 OCR Processing Error';
+            } else if (errorType === 'ValidationError' || message.includes('validation')) {
+                errorTitle = '⚠️ Validation Error';
+            }
+            
+            document.getElementById('resultTitle').textContent = errorTitle;
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('resultDetails').innerHTML = '';
+            
+            // Hide action buttons for errors
+            document.getElementById('actionButtons').style.display = 'none';
+        }
+
+        /**
+         * Display duplicate transaction warning
+         * @param {string} title - Warning title
+         * @param {string} message - Warning message
+         * @param {Object} duplicateTransaction - Duplicate transaction data
+         * @param {string} userId - User identifier
+         */
+        function showWarning(title, message, duplicateTransaction, userId) {
+            result.className = 'result warning';
+            result.style.display = 'block';
+            document.getElementById('resultTitle').textContent = '⚠️ ' + title;
+            document.getElementById('resultMessage').textContent = message;
+            
+            if (duplicateTransaction) {
+                const details = formatTransactionDetails(duplicateTransaction, 'warning');
+                document.getElementById('resultDetails').innerHTML = details;
+            } else {
+                document.getElementById('resultDetails').innerHTML = '';
+            }
+
+            // Add "View Transactions" button for duplicates too
+            const actionButtons = document.getElementById('actionButtons');
+            actionButtons.innerHTML = `
+                <a href="/transactions.html?userId=${encodeURIComponent(userId)}" class="action-button primary" target="_blank">
+                    👁️ View Transactions
+                </a>
+                <button type="button" class="action-button secondary" onclick="resetForm()">
+                    📄 Upload Another Receipt
+                </button>
+            `;
+            actionButtons.style.display = 'flex';
+        }
+
+        /**
+         * Format transaction details for clear display
+         * @param {Object} transaction - Transaction object
+         * @param {string} type - Display type ('success' or 'warning')
+         * @returns {string} HTML string with formatted details
+         */
+        function formatTransactionDetails(transaction, type = 'success') {
+            const borderClass = type === 'warning' ? 'warning-border' : '';
+            const formattedDate = formatDate(transaction.date);
+            
+            return `
+                <div class="transaction-details ${borderClass}">
+                    <div class="detail-row">
+                        <span class="detail-label">Transaction ID:</span>
+                        <span class="detail-value" style="font-size: 0.9em; font-family: monospace;">${transaction.transactionID || transaction.transactionId || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount:</span>
+                        <span class="detail-value amount">$${transaction.amount.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Merchant:</span>
+                        <span class="detail-value">${transaction.merchant || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Category:</span>
+                        <span class="detail-value">${transaction.category || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value" style="text-transform: capitalize;">${transaction.type || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date:</span>
+                        <span class="detail-value">${formattedDate}</span>
+                    </div>
+                    ${transaction.description ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Description:</span>
+                        <span class="detail-value">${transaction.description}</span>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        /**
+         * Format date from YYYY-MM-DD to readable format
+         * @param {string} dateString - Date in YYYY-MM-DD format
+         * @returns {string} Formatted date string
+         */
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const [year, month, day] = dateString.split('-').map(Number);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[month - 1]} ${day}, ${year}`;
+        }
+
+        /**
+         * Reset form for new upload
+         */
+        function resetForm() {
+            uploadForm.reset();
+            previewImage.style.display = 'none';
+            fileInfo.textContent = '';
+            result.style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'none';
+            document.getElementById('userId').value = 'test-user-123';
+        }
+    </script>
+</body>
+</html>

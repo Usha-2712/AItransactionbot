@@ -4,6 +4,25 @@ A full-stack web app that lets users record transactions by chatting in natural 
 
 ---
 
+## Screenshots
+
+### 1. Landing Page
+![Landing Page](landingpage.png)
+
+### 2. Chatbot Page
+![Chatbot Page](chatbotpage.png)
+
+### 3. Transaction History Page
+![Transaction History Page](transactionpage.png)
+
+### 4. Dashboard Page
+![Dashboard Page](dashboardpage.png)
+
+### 5. Upload Receipt Page
+![Upload Receipt Page](uploadreceipt page.png)
+
+---
+
 ## Features
 
 ###  Transaction capture (2 ways)
